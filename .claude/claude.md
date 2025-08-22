@@ -273,9 +273,9 @@ Focus on [specific area: deployment/development/tooling] simplification."
 ```
 research-specialist: "AWS, Azure, GCP for hosting"
 ↓
-simplification-specialist: "Recommend Vercel for frontend + Railway for backend"
+simplification-specialist: "Recommend Hathora for multiplayer lobby hosting"
 ↓ 
-development-manager: "Approve Vercel, evaluate Railway security"
+development-manager: "Approve Hathora for scalable lobby management"
 ```
 
 **Backend + Simplification + Database Coordination:**
@@ -291,7 +291,7 @@ development-manager: "Approve - reduces operational complexity"
 ### Simplification Priority Framework
 
 #### High Priority Simplification Areas:
-1. **Deployment Complexity**: AWS configurations → Vercel/Railway
+1. **Deployment Complexity**: AWS configurations → Hathora Cloud
 2. **Authentication Systems**: Custom JWT → Auth0/Supabase Auth  
 3. **Database Operations**: Self-hosted → Managed services
 4. **Build Tooling**: Webpack configs → Vite defaults

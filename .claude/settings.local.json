@@ -20,7 +20,22 @@
       "WebFetch(domain:adomgb.info)",
       "WebFetch(domain:blog.roguetemple.com)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(gh repo create:*)",
+      "Bash(claude agent show backend-developer)",
+      "Bash(claude agent update backend-developer --mcp-context-uri context7://)",
+      "Bash(claude agent --help)",
+      "Bash(find:*)",
+      "WebFetch(domain:hathora.dev)",
+      "Bash(npm install)",
+      "Bash(npm test)",
+      "Bash(npm test:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(node:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs"
     ],
     "deny": [],
     "ask": []

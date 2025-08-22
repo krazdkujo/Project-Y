@@ -1,7 +1,7 @@
-# Combat System Redesign: Skills + Equipment Only
+# Combat System Redesign: Refined AP System with Free Basic Actions
 
-**Document Version**: 1.0  
-**Date**: 2025-08-19  
+**Document Version**: 2.0 (Complete AP Integration)  
+**Date**: 2025-08-22  
 **Status**: Core System Design  
 **Maintained By**: Development-Manager Agent
 
@@ -10,135 +10,149 @@
 ## Combat Philosophy
 
 **No Attributes** - All combat calculations use skill levels and equipment bonuses
-**Real-Time Ticks** - Combat happens in real-time with 2-second tick intervals
-**Variable Action Costs** - Different actions require different numbers of ticks
+**Turn-Based AP System** - Combat happens in 5-10 second turns with initiative order
+**Free Basic Actions + AP Abilities** - Basic actions cost 0 AP, special abilities cost 1-8 AP
 **Equipment Matters** - Weapon and armor choice significantly impacts effectiveness
-**Tactical Positioning** - Location and coordination affect combat outcomes
+**8-Player Coordination** - Formations, combinations, and tactical positioning
 
 ---
 
-## Real-Time Tick System
+## Turn-Based AP System
 
-### Tick Timing
+### Turn Timing
 ```yaml
-Standard_Tick: 2 seconds
-Combat_Tick: 2 seconds (same as standard for consistency)
-Emergency_Tick: 2 seconds (no speed changes, encourages preparation)
+Standard_Turn: 5-10 seconds (8 second default)
+Combat_Turn: Same as standard for consistency
+Initiative_Order: Based on skills and equipment
 
 Action Processing:
-1. Collect all queued actions at tick boundary
-2. Validate actions against current game state
-3. Resolve actions simultaneously by type priority
-4. Update game state and positions
-5. Apply damage, effects, and status changes
-6. Broadcast new state to all players
-7. Schedule next tick
+1. Calculate initiative order for all 8 players
+2. Generate 2-3 AP for each player at turn start
+3. Process free basic actions immediately during turn
+4. Queue AP abilities for turn-end resolution
+5. Resolve all AP abilities by initiative order
+6. Update game state and apply all effects
+7. Broadcast new state to all players
+8. Advance to next turn
 ```
 
 ### Action Costs by Type
 ```yaml
-Movement:
-  Basic_Move: 1 tick (move to adjacent square)
-  Running: 1 tick (move 2 squares, +25% noise)
-  Careful_Move: 2 ticks (move 1 square silently)
+Free_Basic_Actions: (0 AP, immediate execution)
+  Basic_Move: Move to adjacent square
+  Basic_Attack: Standard weapon attack
+  Defend: Defensive stance until next turn
+  Open_Door: Unlocked doors and simple interactions
+  Pick_Up_Item: Retrieve items from ground
+  Communicate: Quick tactical communication
 
-Basic_Combat:
-  Weapon_Attack: 2 ticks (standard melee/ranged attack)
-  Unarmed_Attack: 1 tick (weak damage, no weapon skill bonus)
-  Block: 0 ticks (continuous defensive stance)
-  Dodge: 0 ticks (reactive evasion attempt)
+Low_AP_Abilities: (1-2 AP)
+  Power_Attack: Enhanced weapon attack (+50% damage)
+  Precise_Strike: High accuracy attack (+25% hit chance)
+  Tactical_Move: Move 2 squares with defensive bonus
+  Quick_Spell: Minor magical effects
+  Reload_Weapon: Special ammunition or crossbow reload
+  Apply_Item: Use potions and consumables
 
-Advanced_Combat:
-  Power_Attack: 3-4 ticks (high damage, weapon dependent)
-  Precise_Strike: 3 ticks (high accuracy, lower damage)
-  Combo_Attack: 4-6 ticks (multiple strikes)
-  Charge_Attack: 2-5 ticks (movement + attack, distance dependent)
+Medium_AP_Abilities: (3-5 AP)
+  Combo_Attack: Multiple strikes in sequence
+  Area_Spell: Affect multiple targets
+  Formation_Command: Coordinate group positioning
+  Master_Strike: Weapon technique with special effects
+  Switch_Equipment: Change weapon or armor quickly
+  Advanced_Search: Thorough area investigation
 
-Abilities:
-  Simple_Abilities: 1-3 ticks (basic weapon techniques)
-  Complex_Abilities: 5-12 ticks (advanced techniques)
-  Ultimate_Abilities: 15-30 ticks (master techniques, long vulnerability)
+High_AP_Abilities: (6-8 AP)
+  Ultimate_Attack: Devastating single-target ability
+  Master_Spell: Powerful magical effects
+  Group_Coordination: Multi-player combination abilities
+  Tactical_Mastery: Advanced battlefield control
+  Perfect_Strike: Guaranteed critical hit with maximum damage
+  Mass_Healing: Restore health to multiple allies
 
-Magic:
-  Cantrips: 1-2 ticks (minor spells)
-  Basic_Spells: 3-8 ticks (standard spells)
-  Advanced_Spells: 10-20 ticks (powerful spells)
-  Master_Spells: 25-50 ticks (devastating magic, extreme vulnerability)
-
-Items:
-  Drink_Potion: 1 tick (quick consumption)
-  Apply_Item: 2 ticks (use complex items)
-  Reload_Weapon: 2-4 ticks (crossbow, special ammo)
-  Switch_Equipment: 3 ticks (change weapon/armor piece)
-
-Utility:
-  Search: 3 ticks (look for hidden objects)
-  Open_Door: 1 tick (unlocked door)
-  Pick_Lock: 5-15 ticks (skill and lock dependent)
-  Rest: 10 ticks (recover small amount of health/mana)
+Utility_Actions: (Variable AP)
+  Pick_Lock: 1-3 AP (skill and lock dependent)
+  Rest: 2 AP (recover health/mana during combat)
+  Search_Secrets: 3 AP (find hidden passages/traps)
+  Disarm_Trap: 2-4 AP (complexity dependent)
 ```
 
 ---
 
-## Combat Resolution Formulas
+## AP Combat Resolution Formulas
 
 ### Hit Chance Calculation
 ```typescript
-// No attributes - pure skill + equipment system
-hit_chance = base_hit_chance + weapon_accuracy + skill_bonus + situational_modifiers
+// Free basic action hit chance
+basic_hit_chance = base_hit_chance + weapon_accuracy + skill_bonus + situational_modifiers
 
 base_hit_chance = 50  // 50% baseline chance to hit
 weapon_accuracy = weapon.accuracy_bonus  // varies by weapon quality
 skill_bonus = floor(relevant_weapon_skill / 2)  // 0-50 bonus from skill
-situational_modifiers = range_penalty + size_modifier + status_effects
+situational_modifiers = range_penalty + formation_bonus + status_effects
+
+// AP ability enhanced hit chance
+ap_ability_hit_chance = basic_hit_chance + (ap_spent * 5) + ability_specific_bonuses
 
 // Example calculations:
-// Novice: 50 + 5 (basic sword) + 10 (20 sword skill) = 65% hit chance
-// Expert: 50 + 15 (master sword) + 40 (80 sword skill) = 105% (guaranteed hit)
+// Basic attack: 50 + 5 (sword) + 20 (40 sword skill) = 75% hit chance
+// 2 AP Power Attack: 75 + (2 * 5) + 10 (ability bonus) = 95% hit chance
+// 5 AP Master Strike: 75 + (5 * 5) + 25 (master bonus) = 125% (guaranteed hit + effects)
 ```
 
 ### Damage Calculation
 ```typescript
-// Pure skill + equipment damage
-damage = weapon_base_damage + skill_damage_bonus + ability_bonuses - armor_reduction
+// Free basic action damage
+basic_damage = weapon_base_damage + skill_damage_bonus - armor_reduction
 
 weapon_base_damage = weapon.damage_dice  // 1d4 to 2d8 typical range
 skill_damage_bonus = floor(weapon_skill / 4)  // 0-25 bonus from weapon skill
-ability_bonuses = active_ability_damage_mods  // from special attacks
 armor_reduction = armor.damage_reduction + floor(armor_skill / 5)  // 0-20 typical
 
+// AP ability enhanced damage
+ap_ability_damage = basic_damage + (ap_spent * 2) + ability_multipliers + coordination_bonuses
+
+ability_multipliers = ability_specific_damage_mods  // varies by ability
+coordination_bonuses = formation_bonus + combination_bonus  // group tactics
+
 // Example calculations:
-// Novice with dagger: 1d4 + 5 (20 daggers) - 2 (leather armor) = 4-7 damage
-// Master with great sword: 2d6 + 20 (80 swords) - 8 (plate + skill) = 9-18 damage
+// Basic attack with sword: 1d6 + 10 (40 sword skill) - 4 (chain armor) = 3-12 damage
+// 2 AP Power Attack: 3-12 + (2 * 2) + 3 (power bonus) = 10-19 damage
+// 5 AP Combo in formation: 3-12 + (5 * 2) + 8 (combo) + 3 (formation) = 24-33 damage
 ```
 
 ### Critical Hit System
 ```typescript
-// Critical hits based on skill and weapon
-critical_chance = weapon.critical_chance + floor(weapon_skill / 10) + ability_bonuses
+// Critical hits enhanced by AP spending
+critical_chance = weapon.critical_chance + floor(weapon_skill / 10) + (ap_spent * 2) + ability_bonuses
 
-critical_multiplier = 2.0 + (weapon_skill / 100)  // 2.0x to 3.0x multiplier
+critical_multiplier = 2.0 + (weapon_skill / 100) + (ap_spent * 0.1)  // 2.0x to 3.8x multiplier
 critical_damage = normal_damage * critical_multiplier
 
-// High skill weapons become very dangerous on crits
-// Example: 80 sword skill = 2.8x critical multiplier
+// AP abilities have higher critical potential
+// Example: 60 sword skill + 4 AP ability = 14% base crit, 2.9x multiplier
+// Formation coordination can add additional +2% crit chance
 ```
 
 ### Defense Calculations
 ```typescript
-// Blocking with shields or weapons
-block_chance = shield.block_chance + floor(blocking_skill / 2) + floor(shield_skill / 3)
-blocked_damage_reduction = 50% + floor(blocking_skill / 4)  // 50-75% damage reduction
+// Blocking with shields or weapons (can spend AP for enhanced defense)
+block_chance = shield.block_chance + floor(blocking_skill / 2) + floor(shield_skill / 3) + (defensive_ap_spent * 3)
+blocked_damage_reduction = 50% + floor(blocking_skill / 4) + (defensive_ap_spent * 5%)  // 50-90% damage reduction
 
-// Dodging with evasion
-dodge_chance = base_dodge + floor(evasion_skill / 3) - armor_penalty
+// Dodging with evasion (free action, but can enhance with AP)
+dodge_chance = base_dodge + floor(evasion_skill / 3) - armor_penalty + (defensive_ap_spent * 4)
 base_dodge = 10  // 10% baseline dodge
 armor_penalty = heavy_armor ? 15 : medium_armor ? 5 : 0
 
-// Armor damage reduction
+// Armor damage reduction (passive, always active)
 armor_reduction = armor.base_protection + floor(armor_skill / 5)
 // Light armor: 1-3 + 0-20 skill = 1-23 reduction
 // Heavy armor: 8-12 + 0-20 skill = 8-32 reduction
+
+// Group defensive coordination
+formation_defense_bonus = active_formation ? formation.defense_bonus : 0
+group_protection = adjacent_allies_with_shields * 2  // mutual protection
 ```
 
 ---
@@ -260,32 +274,33 @@ Spell_Range: Varies by spell
   - Self spells: No range limit
 ```
 
-### Group Tactics
+### 8-Player Group Tactics
 ```yaml
 Formation_Fighting:
-  Tank_Position: Front line with heavy armor and shields
-    - Attracts enemy attention
-    - Blocks corridors and doorways
-    - Protects vulnerable allies
-    - Uses defensive abilities
+  Tank_Line: (2-3 players) Front line with heavy armor and shields
+    - Uses defensive AP abilities to protect group
+    - Coordinates blocking and crowd control
+    - Can spend AP on formation commands
+    - Shares defensive bonuses with adjacent allies
 
-  Damage_Dealers: Behind front line
-    - Medium armor for mobility
-    - Weapon specialists
-    - Uses offensive abilities
-    - Can flank when opportunity arises
+  Damage_Dealers: (2-3 players) Behind front line
+    - Medium armor for AP generation balance
+    - Coordinates combo attacks and AP abilities
+    - Can flank and use tactical positioning
+    - Benefits from formation accuracy bonuses
 
-  Support_Casters: Back line protection
-    - Light armor for maximum spell effectiveness
-    - Long casting times require protection
-    - Provides buffs, healing, and area damage
-    - Most vulnerable to enemy breakthrough
+  Support_Casters: (2-3 players) Back line protection
+    - Light armor for maximum AP generation
+    - Coordinates area spells and group buffs
+    - Uses high-AP abilities for maximum effect
+    - Protected by formation defensive bonuses
 
-Coordination_Bonuses:
-  - Adjacent allies provide +1 accuracy (fighting together)
-  - Flanking enemies (attacking from opposite sides) provides +2 accuracy
-  - Protecting a casting ally provides shared experience bonuses
-  - Coordinated retreats prevent individual targeting
+AP_Coordination_Bonuses:
+  - Adjacent allies provide +1 accuracy per ally (max +3)
+  - Flanking coordination provides +2 accuracy and +1 AP generation
+  - Protecting casting allies provides +1 AP generation for both
+  - Coordinated AP abilities get 25% damage bonus when synchronized
+  - Formation maintenance grants +1 AP per turn for all members
 ```
 
 ### Environmental Factors
@@ -306,57 +321,68 @@ Interactive_Elements:
 
 ---
 
-## Combat Balance Framework
+## AP Combat Balance Framework
 
 ### Power Scaling by Skill Level
 ```yaml
 Novice (0-24): Basic competency
-  - 50-60% hit chance with appropriate weapons
-  - 1-8 damage per attack typically
-  - Access to basic abilities only
-  - Vulnerable to skilled opponents
+  - 50-60% hit chance with free basic attacks
+  - 1-8 damage per basic attack typically
+  - Access to 1-2 AP abilities only
+  - 2 AP generation per turn
+  - Vulnerable to coordinated opponents
 
 Competent (25-49): Reliable effectiveness
-  - 65-80% hit chance with good weapons
-  - 5-12 damage per attack typically
-  - Access to intermediate abilities
-  - Can hold their own in most fights
+  - 65-80% hit chance with basic attacks
+  - 5-12 damage per basic attack typically
+  - Access to 1-4 AP abilities
+  - 2-3 AP generation per turn
+  - Can participate effectively in group tactics
 
 Skilled (50-74): Superior performance
-  - 80-95% hit chance with quality weapons
-  - 8-16 damage per attack typically
-  - Access to advanced abilities
-  - Dangerous opponent for most enemies
+  - 80-95% hit chance with basic attacks
+  - 8-16 damage per basic attack typically
+  - Access to 1-6 AP abilities
+  - 3 AP generation per turn
+  - Can lead tactical formations
 
 Expert (75-89): Elite capability
-  - 90-100% hit chance with excellent weapons
-  - 12-20 damage per attack typically
-  - Access to master abilities
-  - Can single-handedly change battle outcomes
+  - 90-100% hit chance with basic attacks
+  - 12-20 damage per basic attack typically
+  - Access to 1-7 AP abilities
+  - 3-4 AP generation per turn
+  - Can coordinate complex group abilities
 
 Master (90-100): Legendary prowess
-  - Guaranteed hits with legendary weapons
-  - 15-25+ damage per attack typically
-  - Access to ultimate abilities
-  - Near-invincible in their specialty
+  - Guaranteed hits with basic attacks
+  - 15-25+ damage per basic attack typically
+  - Access to all 1-8 AP abilities
+  - 4-5 AP generation per turn
+  - Can execute devastating AP combinations
 ```
 
-### Equipment vs Skill Balance
+### Equipment vs Skill vs AP Balance
 ```yaml
-Equipment_Dependency: 40% of combat effectiveness
-  - Good equipment can compensate for moderate skill gaps
-  - Legendary equipment makes significant differences
-  - Quality weapons are force multipliers for skill
+Equipment_Dependency: 30% of combat effectiveness
+  - Good equipment enhances both basic actions and AP abilities
+  - Legendary equipment provides unique AP abilities
+  - Quality weapons reduce AP costs for certain abilities
 
-Skill_Dependency: 60% of combat effectiveness
-  - Skill determines ability access and effectiveness
-  - High skill makes any equipment more effective
-  - Master skill levels can overcome equipment disadvantages
+Skill_Dependency: 50% of combat effectiveness
+  - Skill determines AP ability access and effectiveness
+  - High skill increases AP generation rates
+  - Master skill levels unlock ultimate 8 AP abilities
 
-Synergy_Bonuses: Equipment + Skill combinations
-  - Matching high skill with excellent equipment creates devastating combinations
-  - Mismatched equipment (using daggers with sword skills) reduces effectiveness
-  - Certain abilities require both skill AND equipment prerequisites
+AP_Management: 20% of combat effectiveness
+  - Strategic AP spending vs saving creates tactical depth
+  - Coordination timing with other players multiplies effectiveness
+  - Resource management across multiple turns affects outcomes
+
+Synergy_Bonuses: Equipment + Skill + AP combinations
+  - Matching high skill with excellent equipment reduces AP costs
+  - Coordinated AP spending in formations creates devastating effects
+  - Master-level players can chain multiple AP abilities effectively
+  - Group coordination abilities require multiple players and high AP investment
 ```
 
-This combat system creates tactical depth through positioning, timing, and resource management while ensuring that both character development (skills) and equipment choices matter significantly in determining combat outcomes.
+This AP combat system creates tactical depth through turn-based coordination, AP resource management, and 8-player formations while ensuring that character development (skills), equipment choices, and strategic AP spending all matter significantly in determining combat outcomes. The balance between free basic actions and AP abilities provides immediate tactical options while maintaining strategic resource management depth.

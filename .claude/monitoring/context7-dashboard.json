@@ -1,0 +1,219 @@
+{
+  "context7_training_dashboard": {
+    "metadata": {
+      "version": "1.0",
+      "last_updated": "2025-08-22",
+      "coordinator": "Development Manager",
+      "team_size": 6,
+      "training_start_date": "2025-08-22",
+      "target_completion": "2025-09-05"
+    },
+    "team_metrics": {
+      "overall_completion_rate": 0,
+      "average_competency_score": 0,
+      "daily_usage_frequency": 0,
+      "quality_improvement_index": 0,
+      "velocity_improvement_percentage": 0
+    },
+    "individual_progress": {
+      "developers": [
+        {
+          "id": "dev001",
+          "name": "Backend Developer 1",
+          "role": "Backend",
+          "start_date": "2025-08-22",
+          "current_phase": "foundation",
+          "quality_gates": {
+            "gate1_knowledge": {
+              "status": "pending",
+              "score": null,
+              "completion_date": null,
+              "attempts": 0
+            },
+            "gate2_practical": {
+              "status": "pending",
+              "exercises_completed": 0,
+              "total_exercises": 3,
+              "completion_date": null
+            },
+            "gate3_integration": {
+              "status": "pending",
+              "daily_usage_count": 0,
+              "consistency_score": 0,
+              "code_review_references": 0
+            },
+            "gate4_certification": {
+              "status": "pending",
+              "final_assessment_score": null,
+              "certification_date": null
+            }
+          },
+          "daily_tracking": {
+            "context7_queries": [],
+            "successful_implementations": [],
+            "knowledge_shared": [],
+            "time_saved_minutes": 0
+          },
+          "alert_status": "green"
+        },
+        {
+          "id": "dev002", 
+          "name": "Frontend Developer 1",
+          "role": "Frontend",
+          "start_date": "2025-08-22",
+          "current_phase": "foundation",
+          "quality_gates": {
+            "gate1_knowledge": {
+              "status": "pending",
+              "score": null,
+              "completion_date": null,
+              "attempts": 0
+            },
+            "gate2_practical": {
+              "status": "pending",
+              "exercises_completed": 0,
+              "total_exercises": 3,
+              "completion_date": null
+            },
+            "gate3_integration": {
+              "status": "pending",
+              "daily_usage_count": 0,
+              "consistency_score": 0,
+              "code_review_references": 0
+            },
+            "gate4_certification": {
+              "status": "pending",
+              "final_assessment_score": null,
+              "certification_date": null
+            }
+          },
+          "daily_tracking": {
+            "context7_queries": [],
+            "successful_implementations": [],
+            "knowledge_shared": [],
+            "time_saved_minutes": 0
+          },
+          "alert_status": "green"
+        },
+        {
+          "id": "dev003",
+          "name": "Full-Stack Developer 1", 
+          "role": "Full-Stack",
+          "start_date": "2025-08-22",
+          "current_phase": "foundation",
+          "quality_gates": {
+            "gate1_knowledge": {
+              "status": "pending",
+              "score": null,
+              "completion_date": null,
+              "attempts": 0
+            },
+            "gate2_practical": {
+              "status": "pending",
+              "exercises_completed": 0,
+              "total_exercises": 5,
+              "completion_date": null
+            },
+            "gate3_integration": {
+              "status": "pending",
+              "daily_usage_count": 0,
+              "consistency_score": 0,
+              "code_review_references": 0
+            },
+            "gate4_certification": {
+              "status": "pending",
+              "final_assessment_score": null,
+              "certification_date": null
+            }
+          },
+          "daily_tracking": {
+            "context7_queries": [],
+            "successful_implementations": [],
+            "knowledge_shared": [],
+            "time_saved_minutes": 0
+          },
+          "alert_status": "green"
+        }
+      ]
+    },
+    "library_usage_tracking": {
+      "hathora": {
+        "query_count": 0,
+        "success_rate": 0,
+        "most_common_topics": [],
+        "implementation_success": 0
+      },
+      "playwright": {
+        "query_count": 0,
+        "success_rate": 0,
+        "most_common_topics": [],
+        "implementation_success": 0
+      },
+      "websocket": {
+        "query_count": 0,
+        "success_rate": 0,
+        "most_common_topics": [],
+        "implementation_success": 0
+      },
+      "typescript": {
+        "query_count": 0,
+        "success_rate": 0,
+        "most_common_topics": [],
+        "implementation_success": 0
+      },
+      "react": {
+        "query_count": 0,
+        "success_rate": 0,
+        "most_common_topics": [],
+        "implementation_success": 0
+      },
+      "nodejs": {
+        "query_count": 0,
+        "success_rate": 0,
+        "most_common_topics": [],
+        "implementation_success": 0
+      }
+    },
+    "quality_impact_metrics": {
+      "code_review_cycles": {
+        "before_training": 0,
+        "after_training": 0,
+        "improvement_percentage": 0
+      },
+      "bug_reports": {
+        "before_training": 0,
+        "after_training": 0,
+        "improvement_percentage": 0
+      },
+      "feature_delivery_time": {
+        "before_training_days": 0,
+        "after_training_days": 0,
+        "improvement_percentage": 0
+      },
+      "documentation_quality": {
+        "score_before": 0,
+        "score_after": 0,
+        "improvement_percentage": 0
+      }
+    },
+    "alerts_and_escalations": {
+      "active_alerts": [],
+      "escalation_history": [],
+      "pending_interventions": []
+    },
+    "weekly_reports": {
+      "reports": []
+    },
+    "training_effectiveness": {
+      "completion_rate_by_role": {
+        "Backend": 0,
+        "Frontend": 0,
+        "Full-Stack": 0,
+        "QA": 0
+      },
+      "average_time_to_completion": 0,
+      "satisfaction_scores": [],
+      "knowledge_retention_rate": 0
+    }
+  }
+}

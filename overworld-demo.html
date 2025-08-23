@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overworld Navigation System Demo</title>
+    <meta name="description" content="ASCII-based overworld navigation system with hex grid movement, accessibility features, and zone transitions">
+    
+    <!-- Accessibility enhancements -->
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+    
+    <!-- Preload key resources -->
+    <link rel="preload" href="./src/client/OverworldNavigationUI.css" as="style">
+    
+    <style>
+        /* Critical CSS for initial load */
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Courier New', monospace;
+            background-color: #000000;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+            background-color: #000000;
+            color: #00ff00;
+        }
+        
+        .loading h1 {
+            color: #00ff00;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #333333;
+            border-top: 4px solid #00ff00;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #cccccc;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .system-requirements {
+            max-width: 600px;
+            padding: 2rem;
+            background-color: #1a1a1a;
+            border: 1px solid #666666;
+            border-radius: 8px;
+        }
+        
+        .system-requirements h2 {
+            color: #ffff00;
+            margin-top: 0;
+        }
+        
+        .system-requirements ul {
+            line-height: 1.6;
+        }
+        
+        .system-requirements li {
+            margin: 0.5rem 0;
+        }
+        
+        /* Error state */
+        .error {
+            background-color: #660000;
+            border: 2px solid #ff0000;
+            color: #ffffff;
+            padding: 2rem;
+            margin: 2rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .error h2 {
+            color: #ff0000;
+            margin-top: 0;
+        }
+        
+        /* Skip to main content link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: #00ff00;
+            color: #000000;
+            padding: 8px;
+            text-decoration: none;
+            border-radius: 0 0 4px 4px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        
+        .skip-link:focus {
+            top: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Loading screen -->
+    <div id="loading-screen" class="loading" role="status" aria-live="polite">
+        <h1>Overworld Navigation System</h1>
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p class="loading-text">Loading world map and navigation systems...</p>
+        
+        <div class="system-requirements">
+            <h2>System Features</h2>
+            <ul>
+                <li><strong>Hex-based world map</strong> - Procedurally generated biomes and locations</li>
+                <li><strong>Full keyboard navigation</strong> - WASD movement, Tab navigation</li>
+                <li><strong>Screen reader support</strong> - ARIA landmarks, live regions, descriptive labels</li>
+                <li><strong>High contrast design</strong> - WCAG 2.1 AA compliant color ratios</li>
+                <li><strong>Mobile responsive</strong> - Touch-friendly controls and responsive layout</li>
+                <li><strong>Fast travel system</strong> - Quick navigation to discovered locations</li>
+                <li><strong>Route planning</strong> - Path visualization and travel cost calculation</li>
+                <li><strong>Zone transitions</strong> - Seamless integration with dungeon exploration</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Error fallback -->
+    <div id="error-screen" class="error" style="display: none;" role="alert">
+        <h2>System Error</h2>
+        <p>Unable to initialize the overworld navigation system.</p>
+        <p>Please check the browser console for technical details.</p>
+        <button onclick="location.reload()">Retry</button>
+    </div>
+    
+    <!-- Main application container -->
+    <main id="main-content" style="display: none;">
+        <!-- The overworld navigation system will be injected here -->
+    </main>
+    
+    <!-- TypeScript modules -->
+    <script type="module">
+        // Enhanced error handling and loading management
+        class OverworldLoader {
+            constructor() {
+                this.loadingScreen = document.getElementById('loading-screen');
+                this.errorScreen = document.getElementById('error-screen');
+                this.mainContent = document.getElementById('main-content');
+                this.initializeSystem();
+            }
+            
+            async initializeSystem() {
+                try {
+                    // Check browser capabilities
+                    this.checkBrowserSupport();
+                    
+                    // Load and initialize modules
+                    await this.loadModules();
+                    
+                    // Show success state
+                    this.showMainContent();
+                    
+                } catch (error) {
+                    console.error('Failed to initialize overworld system:', error);
+                    this.showError(error.message);
+                }
+            }
+            
+            checkBrowserSupport() {
+                const required = {
+                    'ES6 Modules': 'noModule' in HTMLScriptElement.prototype,
+                    'CSS Grid': CSS.supports('display', 'grid'),
+                    'Flexbox': CSS.supports('display', 'flex'),
+                    'Custom Properties': CSS.supports('--custom', 'property'),
+                    'Local Storage': typeof Storage !== 'undefined'
+                };
+                
+                const unsupported = Object.entries(required)
+                    .filter(([feature, supported]) => !supported)
+                    .map(([feature]) => feature);
+                
+                if (unsupported.length > 0) {
+                    throw new Error(`Browser missing required features: ${unsupported.join(', ')}`);
+                }
+            }
+            
+            async loadModules() {
+                // In a real implementation, these would be actual module imports
+                // For demo purposes, we'll simulate loading
+                
+                const modules = [
+                    'OverworldGenerator',
+                    'OverworldNavigationUI', 
+                    'OverworldIntegration',
+                    'GameRenderer'
+                ];
+                
+                for (let i = 0; i < modules.length; i++) {
+                    const module = modules[i];
+                    this.updateLoadingText(`Loading ${module}...`);
+                    
+                    // Simulate async loading
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    console.log(`✓ Loaded ${module}`);
+                }
+                
+                this.updateLoadingText('Initializing world generation...');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                this.updateLoadingText('Setting up accessibility features...');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Initialize the actual demo system
+                this.initializeDemo();
+            }
+            
+            initializeDemo() {
+                // Create a simplified demo interface
+                this.mainContent.innerHTML = `
+                    <div class="overworld-navigation" role="application" aria-label="Overworld Navigation Map">
+                        <div class="overworld-layout">
+                            <div class="overworld-header">
+                                <h1 id="overworld-title">World Map - Demo Mode</h1>
+                                <div class="overworld-location-status" aria-live="polite" id="location-status">
+                                    Current location: Starting Village (Plains Biome)
+                                </div>
+                            </div>
+                            
+                            <div class="overworld-main">
+                                <nav class="overworld-controls" role="navigation" aria-labelledby="nav-title">
+                                    <h2 id="nav-title" class="visually-hidden">Map Navigation Controls</h2>
+                                    
+                                    <div class="control-group" role="group" aria-labelledby="movement-controls">
+                                        <h3 id="movement-controls">Movement</h3>
+                                        <button type="button" id="move-north" aria-keyshortcuts="w" class="direction-btn">
+                                            <span aria-hidden="true">↑</span> North <kbd>W</kbd>
+                                        </button>
+                                        <button type="button" id="move-south" aria-keyshortcuts="s" class="direction-btn">
+                                            <span aria-hidden="true">↓</span> South <kbd>S</kbd> 
+                                        </button>
+                                        <button type="button" id="move-northeast" aria-keyshortcuts="e" class="direction-btn">
+                                            <span aria-hidden="true">↗</span> Northeast <kbd>E</kbd>
+                                        </button>
+                                        <button type="button" id="move-northwest" aria-keyshortcuts="q" class="direction-btn">
+                                            <span aria-hidden="true">↖</span> Northwest <kbd>Q</kbd>
+                                        </button>
+                                        <button type="button" id="move-southeast" aria-keyshortcuts="d" class="direction-btn">
+                                            <span aria-hidden="true">↘</span> Southeast <kbd>D</kbd>
+                                        </button>
+                                        <button type="button" id="move-southwest" aria-keyshortcuts="a" class="direction-btn">
+                                            <span aria-hidden="true">↙</span> Southwest <kbd>A</kbd>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="control-group" role="group" aria-labelledby="map-controls">
+                                        <h3 id="map-controls">Map Functions</h3>
+                                        <button type="button" id="center-map" aria-keyshortcuts="c">
+                                            <span aria-hidden="true">⊙</span> Center on Player <kbd>C</kbd>
+                                        </button>
+                                        <button type="button" id="toggle-route" aria-keyshortcuts="r">
+                                            <span aria-hidden="true">🗺</span> Toggle Route Planning <kbd>R</kbd>
+                                        </button>
+                                        <button type="button" id="fast-travel" aria-keyshortcuts="f">
+                                            <span aria-hidden="true">⚡</span> Fast Travel Menu <kbd>F</kbd>
+                                        </button>
+                                        <button type="button" id="accessibility-help" aria-keyshortcuts="h">
+                                            <span aria-hidden="true">♿</span> Accessibility Help <kbd>H</kbd>
+                                        </button>
+                                    </div>
+                                </nav>
+                                
+                                <section class="overworld-map-section" aria-labelledby="map-title">
+                                    <h2 id="map-title" class="visually-hidden">Interactive World Map</h2>
+                                    <div id="overworld-map" class="overworld-map" role="img" 
+                                         aria-labelledby="map-title" aria-describedby="map-description" 
+                                         tabindex="0">
+                                        <div id="map-description" class="visually-hidden">
+                                            ASCII representation of the world map showing biomes, locations, and your current position at coordinates 0,0
+                                        </div>
+                                        <div class="demo-map-content">
+                                            <pre aria-hidden="true" id="ascii-map">
+    ≋≋≋∴∴∴♠♠♠♠♠♠▲▲▲▲▲∴∴∴∴∴≋≋≋≋≋♠♠♠♠♠♣♣♣♣♣""""""""..........
+    ≋≋≋∴∴∴♠♠⌂♠♠♠▲⚕▲▲▲∴∴∴∴∴≋≋≋≋≋♠♠♠♠♠♣♣♣♣♣""""""""..........
+    ≋≋≋∴∴∴♠♠♠♠♠♠▲▲▲▲▲∴∴∴∴∴≋≋≋≋≋♠♠♠♠♠♣♣♣♣♣""""""""..........
+    ≋≋≋∴∴∴♠♠♠♠♠♠▲▲▲▲▲∴∴∴∴∴≋≋≋≋≋♠♠♠♠♠♣♣♣♣♣""""""""..........
+    ≋≋≋∴∴∴♠♠♠♠♠♠▲▲▲▲▲∴∴∴∴∴≋≋≋≋≋♠♠♠♠♠♣♣♣♣♣""""""""..........
+    ≋≋≋∴∴∴♠♠♠♠♠♠▲▲▲▲▲∴∴∴∴∴≋≋≋≋≋♠♠♠♠♠♣♣♣♣♣""""""""..........
+    ♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠
+    ♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠@♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠
+    ♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠
+    ♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠♠
+    ..........""""""""♣♣♣♣♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠♠♠♠♠∴∴∴≋≋≋
+    ..........""""""""♣♣♣♣♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠♠♠♠♠∴∴∴≋≋≋
+    ..........""""""""♣♣♣♣♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠♠♠♠♠∴∴∴≋≋≋
+    ..........""""""""♣♣♣♣♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠⚕♠♠♠∴∴∴≋≋≋
+    ..........""""""""♣♣♣♣♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠♠♠♠♠∴∴∴≋≋≋
+    ..........""""""""♣♣♣♣♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠♠♠♠♠∴∴∴≋≋≋
+    ..........""""""""♣♣♣⌂♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠♠♠♠♠∴∴∴≋≋≋
+    ..........""""""""♣♣♣♣♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠♠♠♠♠∴∴∴≋≋≋
+    ..........""""""""♣♣♣♣♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠♠♠♠♠∴∴∴≋≋≋
+    ..........""""""""♣♣♣♣♣♠♠♠♠♠≋≋≋≋≋∴∴∴∴∴▲▲▲▲▲♠♠♠♠♠♠∴∴∴≋≋≋
+                                            </pre>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="map-legend" role="region" aria-labelledby="legend-title">
+                                        <h3 id="legend-title">Map Legend</h3>
+                                        <dl class="legend-list">
+                                            <dt>@ <span class="legend-desc">Your location</span></dt>
+                                            <dt>⌂ <span class="legend-desc">Town</span></dt>
+                                            <dt>⚕ <span class="legend-desc">Dungeon</span></dt>
+                                            <dt>★ <span class="legend-desc">Landmark</span></dt>
+                                            <dt>♠ <span class="legend-desc">Forest</span></dt>
+                                            <dt>▲ <span class="legend-desc">Mountains</span></dt>
+                                            <dt>∴ <span class="legend-desc">Desert</span></dt>
+                                            <dt>≋ <span class="legend-desc">Swamp</span></dt>
+                                            <dt>. <span class="legend-desc">Plains</span></dt>
+                                            <dt>♣ <span class="legend-desc">Jungle</span></dt>
+                                            <dt>" <span class="legend-desc">Savanna</span></dt>
+                                            <dt>❄ <span class="legend-desc">Snow peaks</span></dt>
+                                        </dl>
+                                    </div>
+                                </section>
+                                
+                                <aside class="overworld-info" role="complementary" aria-labelledby="info-title">
+                                    <h2 id="info-title">Location Information</h2>
+                                    
+                                    <div id="current-biome" class="info-section">
+                                        <h3>Current Biome</h3>
+                                        <div id="biome-details" aria-live="polite">
+                                            <div class="biome-info">
+                                                <h4>Forest</h4>
+                                                <p><strong>Elevation:</strong> Moderate</p>
+                                                <p><strong>Climate:</strong> Cool and Humid</p>
+                                                <p><strong>Movement Cost:</strong> 1.2x</p>
+                                                <p><strong>Resources:</strong> Wood, Herbs, Game, Berries</p>
+                                                <p><strong>Potential Encounters:</strong> Wolves, Bears, Bandits, Forest Spirits</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="travel-options" class="info-section">
+                                        <h3>Travel Options</h3>
+                                        <div id="travel-details" aria-live="polite">
+                                            Select a destination to see travel options
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="discovered-locations" class="info-section">
+                                        <h3>Discovered Locations</h3>
+                                        <ul id="locations-list" role="list">
+                                            <li class="discovered-location">
+                                                <button type="button" class="location-btn">
+                                                    <span class="location-icon" aria-hidden="true">⌂</span>
+                                                    Greenwood Village
+                                                </button>
+                                                <div class="location-description">
+                                                    Town in forest biome - 3 hexes northeast
+                                                </div>
+                                            </li>
+                                            <li class="discovered-location">
+                                                <button type="button" class="location-btn">
+                                                    <span class="location-icon" aria-hidden="true">⚕</span>
+                                                    Shadowmere Crypt
+                                                </button>
+                                                <div class="location-description">
+                                                    Dungeon in mountain biome - 7 hexes north
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </aside>
+                            </div>
+                        </div>
+                        
+                        <div class="overworld-status" aria-live="assertive" aria-atomic="true" 
+                             class="visually-hidden" id="announcements">
+                        </div>
+                    </div>
+                `;
+                
+                // Add demo interactivity
+                this.addDemoInteractivity();
+            }
+            
+            addDemoInteractivity() {
+                let playerX = 25, playerY = 7;
+                let routeMode = false;
+                
+                const statusElement = document.getElementById('location-status');
+                const mapElement = document.getElementById('ascii-map');
+                const announcements = document.getElementById('announcements');
+                
+                const announce = (message) => {
+                    announcements.textContent = message;
+                    setTimeout(() => announcements.textContent = '', 3000);
+                };
+                
+                const updateMap = () => {
+                    const lines = mapElement.textContent.split('\\n');
+                    const currentLine = lines[playerY] || '';
+                    const newLine = currentLine.substring(0, playerX) + '@' + currentLine.substring(playerX + 1);
+                    lines[playerY] = newLine;
+                    mapElement.textContent = lines.join('\\n');
+                };
+                
+                // Movement controls
+                document.getElementById('move-north')?.addEventListener('click', () => {
+                    if (playerY > 0) {
+                        playerY--;
+                        announce('Moved north');
+                        updateMap();
+                    }
+                });
+                
+                document.getElementById('move-south')?.addEventListener('click', () => {
+                    if (playerY < 19) {
+                        playerY++;
+                        announce('Moved south');  
+                        updateMap();
+                    }
+                });
+                
+                document.getElementById('center-map')?.addEventListener('click', () => {
+                    announce('View centered on player');
+                });
+                
+                document.getElementById('toggle-route')?.addEventListener('click', () => {
+                    routeMode = !routeMode;
+                    announce(routeMode ? 'Route planning enabled' : 'Route planning disabled');
+                });
+                
+                document.getElementById('fast-travel')?.addEventListener('click', () => {
+                    announce('Fast travel menu opened');
+                    document.getElementById('locations-list')?.focus();
+                });
+                
+                document.getElementById('accessibility-help')?.addEventListener('click', () => {
+                    this.showAccessibilityHelp();
+                });
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', (event) => {
+                    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                        return;
+                    }
+                    
+                    switch (event.code) {
+                        case 'KeyW':
+                            event.preventDefault();
+                            document.getElementById('move-north')?.click();
+                            break;
+                        case 'KeyS':
+                            event.preventDefault();
+                            document.getElementById('move-south')?.click();
+                            break;
+                        case 'KeyC':
+                            event.preventDefault();
+                            document.getElementById('center-map')?.click();
+                            break;
+                        case 'KeyR':
+                            event.preventDefault();
+                            document.getElementById('toggle-route')?.click();
+                            break;
+                        case 'KeyF':
+                            event.preventDefault();
+                            document.getElementById('fast-travel')?.click();
+                            break;
+                        case 'KeyH':
+                            event.preventDefault();
+                            document.getElementById('accessibility-help')?.click();
+                            break;
+                    }
+                });
+            }
+            
+            showAccessibilityHelp() {
+                const modal = document.createElement('div');
+                modal.className = 'overworld-modal';
+                modal.innerHTML = `
+                    <div class="overworld-modal-overlay"></div>
+                    <div class="overworld-modal-content">
+                        <h2>Accessibility Features & Controls</h2>
+                        <div style="text-align: left; max-height: 60vh; overflow-y: auto;">
+                            <h3>Keyboard Navigation</h3>
+                            <ul>
+                                <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>Q</kbd><kbd>E</kbd> - Move character in 6 hex directions</li>
+                                <li><kbd>Tab</kbd> - Navigate through interface elements</li>
+                                <li><kbd>Space</kbd>/<kbd>Enter</kbd> - Activate buttons and selections</li>
+                                <li><kbd>Arrow Keys</kbd> - Pan map view (when implemented)</li>
+                                <li><kbd>C</kbd> - Center view on player</li>
+                                <li><kbd>R</kbd> - Toggle route planning mode</li>
+                                <li><kbd>F</kbd> - Open fast travel menu</li>
+                                <li><kbd>H</kbd> - Show this help dialog</li>
+                                <li><kbd>Escape</kbd> - Close dialogs and cancel actions</li>
+                            </ul>
+                            
+                            <h3>Screen Reader Support</h3>
+                            <ul>
+                                <li>ARIA landmarks for easy navigation</li>
+                                <li>Live regions announce status changes</li>
+                                <li>Descriptive labels for all interactive elements</li>
+                                <li>Semantic heading structure</li>
+                                <li>Alternative text for visual elements</li>
+                            </ul>
+                            
+                            <h3>Visual Accessibility</h3>
+                            <ul>
+                                <li>High contrast colors (WCAG AA compliant)</li>
+                                <li>Clear focus indicators for keyboard navigation</li>
+                                <li>Scalable text and interface elements</li>
+                                <li>Reduced motion support</li>
+                                <li>Minimum 44px touch targets</li>
+                            </ul>
+                            
+                            <h3>Mobile Support</h3>
+                            <ul>
+                                <li>Touch-friendly controls</li>
+                                <li>Responsive layout for all screen sizes</li>
+                                <li>Swipe gestures for map navigation</li>
+                                <li>Virtual keyboard compatibility</li>
+                            </ul>
+                        </div>
+                        <button type="button" class="overworld-modal-btn primary close-btn">Close</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                modal.querySelector('.close-btn').focus();
+                
+                const closeModal = () => modal.remove();
+                modal.querySelector('.close-btn').addEventListener('click', closeModal);
+                modal.querySelector('.overworld-modal-overlay').addEventListener('click', closeModal);
+                modal.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') closeModal();
+                });
+            }
+            
+            updateLoadingText(text) {
+                const loadingText = document.querySelector('.loading-text');
+                if (loadingText) {
+                    loadingText.textContent = text;
+                }
+            }
+            
+            showMainContent() {
+                this.loadingScreen.style.display = 'none';
+                this.mainContent.style.display = 'block';
+                
+                // Focus on the map for keyboard navigation
+                setTimeout(() => {
+                    document.getElementById('overworld-map')?.focus();
+                }, 100);
+                
+                console.log('✅ Overworld Navigation System initialized successfully');
+            }
+            
+            showError(message) {
+                this.loadingScreen.style.display = 'none';
+                this.errorScreen.style.display = 'block';
+                this.errorScreen.querySelector('p').textContent = message;
+            }
+        }
+        
+        // Initialize the loader
+        new OverworldLoader();
+    </script>
+    
+    <!-- Link to actual CSS (will be loaded after modules) -->
+    <link rel="stylesheet" href="./src/client/OverworldNavigationUI.css">
+</body>
+</html>

@@ -1,0 +1,720 @@
+/**
+ * Overworld Navigation UI Styles
+ * 
+ * Accessibility-focused design following WCAG 2.1 AA guidelines:
+ * - High contrast ratios (4.5:1 minimum)
+ * - Clear focus indicators
+ * - Scalable typography 
+ * - Keyboard navigation support
+ * - Screen reader optimization
+ */
+
+/* === UTILITY CLASSES === */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* === MAIN LAYOUT === */
+.overworld-navigation {
+  width: 100%;
+  height: 100vh;
+  background-color: #000000;
+  color: #ffffff;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.overworld-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* === HEADER === */
+.overworld-header {
+  background-color: #1a1a1a;
+  border-bottom: 2px solid #00ff00;
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.overworld-header h1 {
+  color: #00ff00;
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: bold;
+}
+
+.overworld-location-status {
+  color: #ffffff;
+  font-size: 1rem;
+  background-color: #333333;
+  padding: 0.25rem 0.75rem;
+  border-radius: 3px;
+  border: 1px solid #666666;
+}
+
+/* === MAIN CONTENT LAYOUT === */
+.overworld-main {
+  display: grid;
+  grid-template-columns: 250px 1fr 300px;
+  grid-template-areas: "controls map info";
+  gap: 1rem;
+  padding: 1rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* === NAVIGATION CONTROLS === */
+.overworld-controls {
+  grid-area: controls;
+  background-color: #1a1a1a;
+  border: 1px solid #666666;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.overworld-controls h2,
+.overworld-controls h3 {
+  color: #00ff00;
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+  border-bottom: 1px solid #333333;
+  padding-bottom: 0.25rem;
+}
+
+.control-group {
+  margin-bottom: 1.5rem;
+  padding: 0.5rem;
+  background-color: #0a0a0a;
+  border-radius: 4px;
+  border: 1px solid #333333;
+}
+
+.control-group h3 {
+  font-size: 0.9rem;
+  color: #ffff00;
+  margin: 0 0 0.75rem 0;
+}
+
+/* === BUTTONS === */
+button {
+  background-color: #333333;
+  color: #ffffff;
+  border: 1px solid #666666;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+}
+
+button:hover {
+  background-color: #4a4a4a;
+  border-color: #888888;
+}
+
+button:focus,
+button.keyboard-focused {
+  outline: 3px solid #4d90fe;
+  outline-offset: 2px;
+  z-index: 10;
+}
+
+button:active,
+button.is-pressed {
+  background-color: #1a1a1a;
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Direction buttons in a grid layout */
+.direction-btn {
+  width: 100%;
+  margin: 0.125rem;
+  justify-content: flex-start;
+}
+
+/* === KEYBOARD HINTS === */
+kbd {
+  background-color: #666666;
+  color: #ffffff;
+  padding: 0.125rem 0.25rem;
+  border-radius: 2px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-left: auto;
+  border: 1px solid #888888;
+}
+
+/* === MAP SECTION === */
+.overworld-map-section {
+  grid-area: map;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.overworld-map {
+  flex: 1;
+  background-color: #0a0a0a;
+  border: 2px solid #666666;
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  line-height: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.overworld-map:focus {
+  outline: 3px solid #4d90fe;
+  outline-offset: -2px;
+  border-color: #00ff00;
+}
+
+/* === MAP GRID === */
+.map-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+
+.map-row {
+  display: flex;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.map-cell {
+  width: 1ch;
+  height: 1em;
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.map-cell:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  text-shadow: 0 0 2px currentColor;
+}
+
+.map-cell:focus {
+  outline: 1px solid #4d90fe;
+  outline-offset: -1px;
+  background-color: rgba(77, 144, 254, 0.2);
+}
+
+/* === MAP LEGEND === */
+.map-legend {
+  background-color: #1a1a1a;
+  border: 1px solid #666666;
+  border-radius: 4px;
+  padding: 0.75rem;
+}
+
+.map-legend h3 {
+  color: #00ff00;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.legend-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.legend-list dt {
+  color: #ffff00;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.legend-desc {
+  color: #cccccc;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+/* === INFO PANEL === */
+.overworld-info {
+  grid-area: info;
+  background-color: #1a1a1a;
+  border: 1px solid #666666;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.overworld-info h2 {
+  color: #00ff00;
+  font-size: 1.1rem;
+  margin: 0 0 1rem 0;
+  border-bottom: 1px solid #333333;
+  padding-bottom: 0.5rem;
+}
+
+.info-section {
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background-color: #0a0a0a;
+  border-radius: 4px;
+  border: 1px solid #333333;
+}
+
+.info-section h3 {
+  color: #ffff00;
+  font-size: 1rem;
+  margin: 0 0 0.75rem 0;
+}
+
+.info-section p {
+  margin: 0.5rem 0;
+  line-height: 1.4;
+}
+
+.info-section strong {
+  color: #00ffff;
+}
+
+/* === BIOME INFO === */
+.biome-info h4 {
+  color: #ff00ff;
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem 0;
+  text-transform: capitalize;
+}
+
+/* === TRAVEL OPTIONS === */
+.travel-option {
+  background-color: #2a2a2a;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.travel-option h4 {
+  color: #00ff00;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.travel-confirm-btn {
+  background-color: #006600;
+  border-color: #00aa00;
+  color: #ffffff;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.travel-confirm-btn:hover {
+  background-color: #008800;
+  border-color: #00cc00;
+}
+
+.travel-confirm-btn:focus {
+  outline-color: #00ff00;
+}
+
+/* === DISCOVERED LOCATIONS === */
+.discovered-location {
+  list-style: none;
+  margin: 0.5rem 0;
+}
+
+.location-btn {
+  width: 100%;
+  text-align: left;
+  background-color: #2a2a2a;
+  border-color: #555555;
+  padding: 0.75rem;
+  justify-content: flex-start;
+}
+
+.location-btn:hover {
+  background-color: #3a3a3a;
+  border-color: #777777;
+}
+
+.location-icon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+  color: #00ffff;
+}
+
+.location-description {
+  font-size: 0.8rem;
+  color: #aaaaaa;
+  margin-top: 0.25rem;
+  padding-left: 2rem;
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 1200px) {
+  .overworld-main {
+    grid-template-columns: 200px 1fr 250px;
+  }
+  
+  .overworld-navigation {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 900px) {
+  .overworld-main {
+    grid-template-columns: 1fr;
+    grid-template-areas: 
+      "controls"
+      "map" 
+      "info";
+    grid-template-rows: auto 1fr auto;
+  }
+  
+  .overworld-controls,
+  .overworld-info {
+    max-height: 200px;
+  }
+  
+  .overworld-map {
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 600px) {
+  .overworld-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .overworld-navigation {
+    font-size: 12px;
+  }
+  
+  .map-grid {
+    font-size: 14px;
+  }
+  
+  .control-group {
+    margin-bottom: 1rem;
+  }
+  
+  .direction-btn {
+    min-width: auto;
+    font-size: 0.8rem;
+  }
+}
+
+/* === HIGH CONTRAST MODE === */
+@media (prefers-contrast: high) {
+  .overworld-navigation {
+    background-color: #000000;
+    color: #ffffff;
+  }
+  
+  button {
+    background-color: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+  
+  button:focus {
+    outline: 4px solid #ffff00;
+    outline-offset: 2px;
+  }
+  
+  .overworld-header,
+  .overworld-controls,
+  .overworld-info,
+  .info-section,
+  .control-group {
+    background-color: #000000;
+    border-color: #ffffff;
+  }
+  
+  .overworld-map {
+    background-color: #000000;
+    border-color: #ffffff;
+  }
+}
+
+/* === REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  button:active,
+  button.is-pressed {
+    transform: none;
+  }
+}
+
+/* === LARGE TEXT MODE === */
+@media (min-resolution: 120dpi) {
+  .overworld-navigation {
+    font-size: 16px;
+  }
+  
+  .map-grid {
+    font-size: 18px;
+  }
+  
+  button {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* === FOCUS MANAGEMENT === */
+.overworld-navigation:focus-within .map-cell {
+  transition: all 0.1s ease;
+}
+
+/* === KEYBOARD NAVIGATION INDICATORS === */
+.keyboard-focused {
+  position: relative;
+}
+
+.keyboard-focused::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 2px solid #4d90fe;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* === LOADING AND ERROR STATES === */
+.overworld-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #00ff00;
+  font-size: 1.2rem;
+}
+
+.overworld-error {
+  background-color: #660000;
+  border: 2px solid #ff0000;
+  color: #ffffff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem;
+}
+
+/* === SCREEN READER ENHANCEMENTS === */
+[aria-live] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* === MODAL DIALOGS === */
+.overworld-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overworld-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.overworld-modal-content {
+  position: relative;
+  background-color: #1a1a1a;
+  border: 2px solid #00ff00;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 255, 0, 0.2);
+}
+
+.overworld-modal-content h2 {
+  color: #00ff00;
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.overworld-modal-content p {
+  color: #ffffff;
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.overworld-modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.overworld-modal-btn {
+  background-color: #333333;
+  color: #ffffff;
+  border: 1px solid #666666;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.overworld-modal-btn.primary {
+  background-color: #006600;
+  border-color: #00aa00;
+}
+
+.overworld-modal-btn:hover {
+  background-color: #4a4a4a;
+  border-color: #888888;
+}
+
+.overworld-modal-btn.primary:hover {
+  background-color: #008800;
+  border-color: #00cc00;
+}
+
+.overworld-modal-btn:focus {
+  outline: 3px solid #4d90fe;
+  outline-offset: 2px;
+}
+
+.overworld-modal-btn.primary:focus {
+  outline-color: #00ff00;
+}
+
+.overworld-modal-btn:active {
+  transform: translateY(1px);
+}
+
+/* === INTEGRATION TRANSITIONS === */
+.overworld-navigation.transitioning {
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.overworld-navigation.entering {
+  animation: slideInFromLeft 0.4s ease-out;
+}
+
+.overworld-navigation.exiting {
+  animation: slideOutToLeft 0.4s ease-in;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+/* === INTEGRATION STATES === */
+.game-renderer.overworld-mode {
+  display: none;
+}
+
+.game-renderer.dungeon-mode {
+  display: block;
+}
+
+/* === ANNOUNCEMENTS === */
+#overworld-announcements {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Make sure interactive elements have sufficient size for touch */
+button,
+.map-cell {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (pointer: coarse) {
+  button,
+  .location-btn {
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+  }
+  
+  .map-cell {
+    min-width: 24px;
+    min-height: 24px;
+  }
+}

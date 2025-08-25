@@ -1,0 +1,33 @@
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                          ┃                          ┃
+┃    ████ ███  ██ ████ ███  ██  █       ██   ████         ┃     ╔══════════════════╗ ┃
+┃      █  █ █ █ █  █  █ █ █ █ █ █       █ █ █             ┃     ║   COMMAND STATUS ║ ┃
+┃      █  ███ ████ █  ███ █ █ █ █       ███  ███          ┃     ╠══════════════════╣ ┃
+┃      █  █ █ █ █  █  █ █ █ █ █ █       █ █     █         ┃     ║ Rank: Colonel    ║ ┃
+┃      █  █ █ █ █ ████ █ █  ██  ████    █ █ ████         ┃     ║ Forces: 2,847    ║ ┃
+┃                                                          ┃     ║ Bases: 15        ║ ┃
+┃             ┏━━━━━━━━━━━━━━━━━━━━━━━━━┓                    ┃     ║ Status: ACTIVE   ║ ┃
+┃             ┃     MISSION CONTROL   ┃                    ┃     ╚══════════════════╝ ┃
+┃             ┣━━━━━━━━━━━━━━━━━━━━━━━━━┫                    ┃                          ┃
+┃             ┃ [1] SINGLE OPERATION  ┃                    ┃     ╔══════════════════╗ ┃
+┃             ┃ [2] JOINT MISSION     ┃                    ┃     ║   INTEL BRIEFING ┃ ┃
+┃             ┃ [3] COMMAND ACADEMY   ┃                    ┃     ╠══════════════════╣ ┃
+┃             ┃ [4] TACTICAL CONFIG   ┃                    ┃     ║ • New hostiles   ┃ ┃
+┃             ┃ [5] FIELD MANUAL      ┃                    ┃     ║ • Weapon cache   ┃ ┃
+┃             ┃ [6] STAND DOWN        ┃                    ┃     ║ • Ally requests  ┃ ┃
+┃             ┗━━━━━━━━━━━━━━━━━━━━━━━━━┛                    ┃     ║ • Sector update  ┃ ┃
+┃                                                          ┃     ╚══════════════════╝ ┃
+┃   ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓       ┃                          ┃
+┃   ┃        COMMANDER, WELCOME TO SECTOR 7      ┃       ┃                          ┃
+┃   ┃    Last deployment: GRID REFERENCE A-15   ┃       ┃                          ┃
+┃   ┃    Mission duration: 0347 HOURS            ┃       ┃                          ┃
+┃   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛       ┃                          ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+TACTICAL CONTROLS:
+[1-6] - Execute command   [ENTER] - Confirm order   [ESC] - Abort
+[ALPHA] - Priority mode   [TAB] - Command cycling
+
+Military Command Theme: #00FF41 on #001100
+Box Characters: ┏━┓┃┗┛┣┫┳┻╋ ╔═╗║╚╝╠╣╦╩╬
+Status Indicators: ████▓▓▒▒░░ ▶◀▲▼ ★☆●○

@@ -276,8 +276,10 @@ export class GameClient {
     this.actionSelector.setEnabled(false);
     this.inputHandler.setEnabled(true);
     
-    // Show initial message
-    this.showMessage('Connected to server. Waiting for other players...');
+    // Show initial messages
+    this.gameRenderer.addMessage('ASCII Roguelike v1.0');
+    this.gameRenderer.addMessage('Connected to server');
+    this.showMessage('Waiting for players...');
   }
 
   /**
@@ -536,7 +538,10 @@ export class GameClient {
   private showMessage(message: string): void {
     console.log(`Game: ${message}`);
     
-    // Dispatch event for UI to handle
+    // Add to ASCII message log
+    this.gameRenderer.addMessage(message);
+    
+    // Also dispatch event for any remaining UI components
     if (typeof document !== 'undefined') {
       const event = new CustomEvent('gameMessage', {
         detail: { message, type: 'info' }
@@ -551,7 +556,10 @@ export class GameClient {
   private showErrorMessage(message: string): void {
     console.error(`Error: ${message}`);
     
-    // Dispatch event for UI to handle
+    // Add to ASCII message log with error prefix
+    this.gameRenderer.addMessage(`ERROR: ${message}`);
+    
+    // Also dispatch event for any remaining UI components
     if (typeof document !== 'undefined') {
       const event = new CustomEvent('gameMessage', {
         detail: { message, type: 'error' }

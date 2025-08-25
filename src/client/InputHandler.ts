@@ -65,6 +65,10 @@ export class InputHandler {
     this.keyBindings.set('KeyZ', () => this.handleMovement(-1, 1));  // Down-Left
     this.keyBindings.set('KeyX', () => this.handleMovement(1, 1));   // Down-Right
     
+    // Tactical movement modes
+    this.keyBindings.set('KeyM', () => this.enterMovementMode());     // Multi-square movement
+    this.keyBindings.set('ShiftKeyM', () => this.handleRunMovement()); // Run movement mode
+    
     // Action shortcuts
     this.keyBindings.set('Space', () => this.handleBasicAttack());
     this.keyBindings.set('KeyF', () => this.handleBasicAttack()); // Alternative attack key
@@ -266,8 +270,10 @@ export class InputHandler {
     
     // Check if the new position is valid
     if (this.gameRenderer.isWalkable(newPosition.x, newPosition.y)) {
-      this.networkClient.executeFreeAction('MOVE', newPosition);
+      // Use new tactical movement system - costs 1 AP
+      this.networkClient.executeAPAction('tactical_move', newPosition);
       this.currentPlayerPosition = newPosition;
+      this.showMessage("Moved 1 square (1 AP)");
     } else {
       this.showMessage("Can't move there!");
     }

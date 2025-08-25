@@ -10,7 +10,7 @@
  * - Intelligent caching strategies
  */
 
-import { CellType } from '../shared/DungeonTypes.js';
+import { CellType } from '../shared/DungeonTypes';
 
 // Virtual cell representation for diffing
 export interface VirtualCell {

@@ -52,9 +52,18 @@ export interface Player {
   health: number;
   maxHealth: number;
   currentAP: number;
+  movement: MovementStats;
   skills: SkillSet;
   equipment: Equipment;
   status: PlayerStatus;
+}
+
+// Movement system for tactical gameplay
+export interface MovementStats {
+  baseSpeed: number;        // Base squares per 1 AP
+  currentSpeed: number;     // Modified by equipment/status
+  remainingMovement: number; // Movement left this turn
+  movementMode: 'walk' | 'run' | 'sneak';
 }
 
 export interface SkillSet {

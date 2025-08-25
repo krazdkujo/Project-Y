@@ -1,0 +1,30 @@
+┌──────────────────────────────────────────────────────────┬──────────────────────────┐
+│                                                          │                          │
+│                   TACTICAL ASCII ROGUELIKE               │     ╔══════════════════╗ │
+│                         Version 2.0                     │     ║   QUICK STATUS   ║ │
+│                                                          │     ╠══════════════════╣ │
+│               ┌─────────────────────────┐                │     ║ Build: v2.0.1    ║ │
+│               │      MAIN MENU          │                │     ║ Players: 247     ║ │
+│               ├─────────────────────────┤                │     ║ Servers: 12      ║ │
+│               │ [1] Single Player       │                │     ║ Status: Online   ║ │
+│               │ [2] Multiplayer         │                │     ╚══════════════════╝ │
+│               │ [3] Character Creator   │                │                          │
+│               │ [4] Settings            │                │     ╔══════════════════╗ │
+│               │ [5] Help & Tutorial     │                │     ║   NEWS & UPDATES ║ │
+│               │ [6] Quit Game          │                │     ╠══════════════════╣ │
+│               └─────────────────────────┘                │     ║ • New skill tree ║ │
+│                                                          │     ║ • Balance patch  ║ │
+│    ┌─────────────────────────────────────────────┐      │     ║ • Guild system   ║ │
+│    │            Welcome back, Player!            │      │     ║ • Bug fixes      ║ │
+│    │    Last session: Dungeon Level 15          │      │     ╚══════════════════╝ │
+│    │    Time played: 42h 30m                    │      │                          │
+│    └─────────────────────────────────────────────┘      │                          │
+└──────────────────────────────────────────────────────────┴──────────────────────────┘
+
+CONTROLS:
+[1-6] - Select menu option    [ENTER] - Confirm    [ESC] - Exit
+[↑↓] - Navigate menu         [TAB] - Cycle focus
+
+Terminal Green Theme: #00FF00 on #000000
+Box Characters: ┌─┐│└┘├┤┬┴┼ ╔═╗║╚╝╠╣╦╩╬
+Progress Bars: █▒░▓ ▶◀▲▼ ★☆●○

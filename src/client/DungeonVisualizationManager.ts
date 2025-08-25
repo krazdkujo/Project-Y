@@ -8,7 +8,7 @@
  * - Node.js: Performance-optimized rendering with memory management
  */
 
-import { DungeonGenerator } from '../game/dungeons/DungeonGenerator.js';
+import { DungeonGenerator } from '../game/dungeons/DungeonGenerator';
 import { 
   DungeonConfig, 
   GeneratedDungeon, 
@@ -75,13 +75,13 @@ export class DungeonVisualizationManager {
   private dirtyRegions: Set<string> = new Set();
   private isRendering: boolean = false;
   private renderingMetrics: RenderingMetrics = {
-    cellsRendered: 0,
     renderTime: 0,
     cacheHits: 0,
     cacheMisses: 0,
     memoryUsage: 0,
     lastUpdate: 0,
     batchCount: 0,
+    cellsUpdated: 0,
     cellsSkipped: 0,
     cacheHitRate: 0,
     frameRate: 60,
@@ -343,7 +343,7 @@ export class DungeonVisualizationManager {
 
   private getThemeCharacters(theme: DungeonThemeType): Record<CellType, string> {
     const baseChars: Record<CellType, string> = {
-      [CellType.VOID]: ' ',
+      [CellType.EMPTY]: ' ',
       [CellType.FLOOR]: '.',
       [CellType.WALL]: '#',
       [CellType.DOOR]: '+',
@@ -354,7 +354,8 @@ export class DungeonVisualizationManager {
       [CellType.WATER]: '~',
       [CellType.LAVA]: '≈',
       [CellType.ICE]: '*',
-      [CellType.CRYSTAL]: '◊'
+      [CellType.CRYSTAL]: '◊',
+      [CellType.MONSTER_SPAWN]: 'M'
     };
 
     // Theme-specific character overrides
@@ -440,7 +441,7 @@ export class DungeonVisualizationManager {
 
   private getThemeColors(theme: DungeonThemeType): Record<CellType, string> {
     const baseColors: Record<CellType, string> = {
-      [CellType.VOID]: '#000000',
+      [CellType.EMPTY]: '#000000',
       [CellType.FLOOR]: '#404040',
       [CellType.WALL]: '#808080',
       [CellType.DOOR]: '#8B4513',
@@ -451,7 +452,8 @@ export class DungeonVisualizationManager {
       [CellType.WATER]: '#0080FF',
       [CellType.LAVA]: '#FF4500',
       [CellType.ICE]: '#87CEEB',
-      [CellType.CRYSTAL]: '#E6E6FA'
+      [CellType.CRYSTAL]: '#E6E6FA',
+      [CellType.MONSTER_SPAWN]: '#FF6600'
     };
 
     // Theme-specific color schemes
@@ -643,13 +645,13 @@ export class DungeonVisualizationManager {
         cellType = cells[cellIndex] as CellType;
       } else {
         // Use void for out-of-bounds areas
-        cellType = CellType.VOID;
+        cellType = CellType.EMPTY;
       }
       
       return {
         character: this.getCellCharacter(cellType),
         color: this.getCellColor(cellType),
-        opacity: cellType === CellType.VOID ? '0.3' : '1.0'
+        opacity: cellType === CellType.EMPTY ? '0.3' : '1.0'
       };
     };
     
@@ -726,7 +728,7 @@ export class DungeonVisualizationManager {
 
   private getDefaultCellCharacter(cellType: CellType): string {
     switch (cellType) {
-      case CellType.VOID: return ' ';
+      case CellType.EMPTY: return ' ';
       case CellType.FLOOR: return '.';
       case CellType.WALL: return '#';
       case CellType.DOOR: return '+';
@@ -744,7 +746,7 @@ export class DungeonVisualizationManager {
 
   private getDefaultCellColor(cellType: CellType): string {
     switch (cellType) {
-      case CellType.VOID: return '#000000';
+      case CellType.EMPTY: return '#000000';
       case CellType.FLOOR: return '#404040';
       case CellType.WALL: return '#808080';
       case CellType.DOOR: return '#8B4513';

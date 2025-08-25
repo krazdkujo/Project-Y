@@ -18,14 +18,20 @@ export const AP_SYSTEM = {
   MAX_FORMATION_CALC_TIME: 75,   // ms
 } as const;
 
-// Free Action Types (0 AP cost)
+// Movement System Configuration
+export const MOVEMENT_SYSTEM = {
+  DEFAULT_BASE_SPEED: 3,     // Squares per 1 AP for average character
+  MAX_MOVEMENT_PER_TURN: 12, // Maximum squares in one turn
+  MOVEMENT_AP_COST: 1,       // AP cost for movement action
+  
+  // Movement modes
+  WALK_MODIFIER: 1.0,        // Normal speed
+  RUN_MODIFIER: 1.5,         // 50% faster, may have penalties
+  SNEAK_MODIFIER: 0.5,       // 50% slower, stealth bonus
+} as const;
+
+// Free Action Types (0 AP cost) - kept for immediate reactions
 export const FREE_ACTIONS = {
-  MOVE: {
-    type: 'MOVE',
-    apCost: 0,
-    immediate: true,
-    maxRange: 1, // squares
-  },
   BASIC_ATTACK: {
     type: 'BASIC_ATTACK',
     apCost: 0,
@@ -40,8 +46,56 @@ export const FREE_ACTIONS = {
   },
 } as const;
 
+// Movement Abilities (1 AP cost)
+export const MOVEMENT_ABILITIES = {
+  MOVE: {
+    id: 'tactical_move',
+    name: 'Move',
+    apCost: 1,
+    type: 'movement',
+    description: 'Move up to your speed in squares',
+  },
+  RUN: {
+    id: 'tactical_run',
+    name: 'Run',
+    apCost: 1,
+    type: 'movement',
+    description: 'Move faster but louder',
+  },
+  SNEAK: {
+    id: 'tactical_sneak',
+    name: 'Sneak',
+    apCost: 1,
+    type: 'movement',
+    description: 'Move quietly but slowly',
+  },
+} as const;
+
 // Basic AP Abilities (1-3 AP cost)
 export const BASIC_AP_ABILITIES = [
+  // Movement abilities - always available
+  {
+    id: 'tactical_move',
+    name: 'Move',
+    apCost: 1,
+    skillRequirement: { skill: 'combat', level: 0 },
+    effect: { type: 'movement', mode: 'walk' }
+  },
+  {
+    id: 'tactical_run', 
+    name: 'Run',
+    apCost: 1,
+    skillRequirement: { skill: 'combat', level: 5 },
+    effect: { type: 'movement', mode: 'run' }
+  },
+  {
+    id: 'tactical_sneak',
+    name: 'Sneak',
+    apCost: 1,
+    skillRequirement: { skill: 'combat', level: 10 },
+    effect: { type: 'movement', mode: 'sneak' }
+  },
+  // Combat abilities
   {
     id: 'power_strike',
     name: 'Power Strike',

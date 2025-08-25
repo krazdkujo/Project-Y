@@ -271,6 +271,12 @@ describe('APAbilityProcessor', () => {
       health: 100,
       maxHealth: 100,
       currentAP: 5,
+      movement: {
+        baseSpeed: 3,
+        currentSpeed: 3,
+        remainingMovement: 3,
+        movementMode: 'walk' as const
+      },
       skills: {
         combat: 30,
         swords: 50,

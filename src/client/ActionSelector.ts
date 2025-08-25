@@ -2,26 +2,24 @@ import { APAbility, FreeAction } from '../shared/types';
 import { BASIC_AP_ABILITIES, MASTER_AP_ABILITIES, LEGENDARY_AP_ABILITIES, FREE_ACTIONS } from '../shared/constants';
 
 /**
- * Action selection interface for Free Actions vs AP Abilities
+ * ASCII Action selection interface for Free Actions vs AP Abilities
+ * Pure ASCII interface in classic ADOM style with keyboard navigation
  * Handles UI for selecting and executing different types of actions
  */
 export class ActionSelector {
   private currentAP = 0;
   private isEnabled = false;
-  private selectedActionType: 'FREE' | 'AP' | null = null;
+  private selectedActionType: 'FREE' | 'AP' = 'FREE';
+  private selectedActionIndex = 0;
   private selectedAction: any = null;
   
   // Callbacks
   private onActionSelectedCallback: ((actionType: string, actionData: any) => void) | null = null;
   private onTurnEndCallback: (() => void) | null = null;
   
-  // UI elements
-  private readonly CONTAINER_ID = 'action-selector';
-  private readonly FREE_ACTIONS_ID = 'free-actions';
-  private readonly AP_ABILITIES_ID = 'ap-abilities';
-  private readonly ACTION_PREVIEW_ID = 'action-preview';
-  private readonly CONFIRM_BUTTON_ID = 'confirm-action';
-  private readonly END_TURN_BUTTON_ID = 'end-turn';
+  // ASCII Display state
+  private asciiDisplay = '';
+  private showingMenu = false;
 
   constructor() {
     this.initializeUI();
@@ -29,40 +27,50 @@ export class ActionSelector {
   }
 
   /**
-   * Initialize the action selector UI
+   * Initialize ASCII action selector
    */
   private initializeUI(): void {
-    this.createActionSelector();
-    this.createFreeActionsPanel();
-    this.createAPAbilitiesPanel();
-    this.createActionPreview();
-    this.createActionButtons();
+    this.generateASCIIDisplay();
   }
 
   /**
-   * Create main action selector container
+   * Generate main ASCII action selector display
    */
-  private createActionSelector(): void {
-    const container = document.createElement('div');
-    container.id = this.CONTAINER_ID;
-    container.className = 'action-selector disabled';
-    container.innerHTML = `
-      <div class="action-selector-header">
-        <h3>Action Selection</h3>
-        <div class="action-type-tabs">
-          <button class="tab-button active" data-type="FREE">Free Actions (0 AP)</button>
-          <button class="tab-button" data-type="AP">AP Abilities</button>
-        </div>
-      </div>
-      <div class="action-panels">
-        <!-- Free actions and AP abilities panels will be inserted here -->
-      </div>
-    `;
-    
-    const uiContainer = document.getElementById('ui-container');
-    if (uiContainer) {
-      uiContainer.appendChild(container);
+  private generateASCIIDisplay(): string {
+    if (!this.isEnabled || !this.showingMenu) {
+      return `
+╔═════════════════════════╗
+║     ACTION SELECTOR     ║
+╠═════════════════════════╣
+║ Press 'A' to show menu  ║
+║ or use direct commands: ║
+║ WASD - Move             ║
+║ Space - Basic Attack    ║
+║ D - Defend              ║
+║ Enter - End Turn        ║
+╚═════════════════════════╝`;
     }
+
+    const header = this.generateHeader();
+    const actionList = this.selectedActionType === 'FREE' 
+      ? this.generateFreeActionsASCII() 
+      : this.generateAPAbilitiesASCII();
+    const footer = this.generateFooter();
+    
+    return header + actionList + footer;
+  }
+
+  private generateHeader(): string {
+    const freeActive = this.selectedActionType === 'FREE' ? '[FREE]' : ' FREE ';
+    const apActive = this.selectedActionType === 'AP' ? '[ AP ]' : '  AP  ';
+    
+    return `
+╔═════════════════════════╗
+║     ACTION SELECTOR     ║
+╠═════════════════════════╣
+║ ${freeActive} ${apActive}        ║
+║ F=Free A=AP Q=Quit      ║
+╠═════════════════════════╣`;
   }
 
   /**

@@ -1,0 +1,35 @@
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                   SOLDIER REQUISITION                    ┃     ╔══════════════════╗ ┃
+┃                                                          ┃     ║   COMMAND POINTS ║ ┃
+┃  CODENAME: [GHOST_OPERATIVE__]      CLASSIFICATION: SPEC ┃     ╠══════════════════╣ ┃
+┃                                                          ┃     ║ Available: 150   ┃ ┃
+┃  ┏━━━━━━━━━━━━━━━━━━ COMBAT TRAINING ━━━━━━━━━━━━━━━━━━━━┓ ┃     ║ Allocated: 112   ┃ ┃
+┃  ┃ Assault     [████████▒▒] 80  Mobility  [████████▒▒] 80┃ ┃     ║ Reserve: 38      ┃ ┃
+┃  ┃ Tactical    [██████▒▒▒▒] 60  Survival  [█████▒▒▒▒▒] 50┃ ┃     ╚══════════════════╝ ┃
+┃  ┃ Technical   [████▒▒▒▒▒▒] 40  Medical   [███▒▒▒▒▒▒▒] 30┃ ┃                          ┃
+┃  ┃ Stealth     [██████▒▒▒▒] 60  Command   [████▒▒▒▒▒▒] 40┃ ┃     ╔══════════════════╗ ┃
+┃  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃     ║  COMBAT READINESS ┃ ┃
+┃                                                          ┃     ╠══════════════════╣ ┃
+┃  ┏━━━━━━━━━━━━━━━━ WEAPON SYSTEMS ━━━━━━━━━━━━━━━━━━━━━━┓ ┃     ║ HP: 135/135      ┃ ┃
+┃  ┃ Rifles      [████████▒▒] 80  Explosives[███▒▒▒▒▒▒▒] 30┃ ┃     ║ AP: 8/8          ┃ ┃
+┃  ┃ Sidearms    [████▒▒▒▒▒▒] 40  Heavy Weap[██▒▒▒▒▒▒▒▒] 20┃ ┃     ║ Stamina: 6/6     ┃ ┃
+┃  ┃ Blades      [██████▒▒▒▒] 60  Support   [████▒▒▒▒▒▒] 40┃ ┃     ║ Load: 65kg       ┃ ┃
+┃  ┃ Marksman    [██▒▒▒▒▒▒▒▒] 20  CQC       [█████▒▒▒▒▒] 50┃ ┃     ╚══════════════════╝ ┃
+┃  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃                          ┃
+┃                                                          ┃     ╔══════════════════╗ ┃
+┃  ┏━━━━━━━━━━━━━━━━━━ TECH SPECS ━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃     ║  MISSION LOADOUT ┃ ┃
+┃  ┃ Electronics [████▒▒▒▒▒▒] 40  Comms     [███▒▒▒▒▒▒▒] 30┃ ┃     ╠══════════════════╣ ┃
+┃  ┃ Hacking     [██▒▒▒▒▒▒▒▒] 20  Vehicles  [██▒▒▒▒▒▒▒▒] 20┃ ┃     ║ M4A1 Carbine     ┃ ┃
+┃  ┃ Engineering [██████▒▒▒▒] 60  Piloting  [█▒▒▒▒▒▒▒▒▒] 10┃ ┃     ║ Combat Armor     ┃ ┃
+┃  ┃ Demolitions [████▒▒▒▒▒▒] 40  Intel     [████▒▒▒▒▒▒] 40┃ ┃     ║ Med Kit          ┃ ┃
+┃  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃     ║ Rations (MRE)    ┃ ┃
+┃                                                          ┃     ╚══════════════════╝ ┃
+┃  [DEPLOY] Create Operative  [ABORT] Reset  [RTB] Return  ┃                          ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+REQUISITION CONTROLS:
+[+/-] Adjust training   [1-9] Quick select specialization
+[TAB] Navigate sectors  [ENTER] Confirm allocation
+
+SPECIALIZATION TRACKS: 34 skills across 8 military disciplines
+Each skill rated by operational effectiveness: ★★★★★ (5-star system)

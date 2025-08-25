@@ -58,20 +58,28 @@ export class FreeActionProcessor {
 
     // Validate movement range (max 1 square for free movement)
     const distance = this.calculateDistance(player.position, targetPosition);
-    if (distance > FREE_ACTIONS.MOVE.maxRange) {
+    if (distance > 1) {
       return {
         success: false,
-        reason: ERROR_MESSAGES.OUT_OF_RANGE,
+        reason: 'Cannot move more than 1 square with free action',
         timestamp: Date.now()
       };
     }
 
-    // Check if target position is valid and unoccupied
-    if (!this.gameMap.isValidPosition(targetPosition) || 
-        this.gameMap.isOccupied(targetPosition)) {
+    // Check if target position is occupied by another player
+    if (this.gameMap.isOccupied(targetPosition)) {
       return {
         success: false,
-        reason: 'Position is blocked or invalid',
+        reason: 'Another player is already at that position',
+        timestamp: Date.now()
+      };
+    }
+
+    // Check if target position is valid (not a wall, in bounds)
+    if (!this.gameMap.isValidPosition(targetPosition)) {
+      return {
+        success: false,
+        reason: 'Cannot move through walls!',
         timestamp: Date.now()
       };
     }
@@ -263,7 +271,7 @@ export class FreeActionProcessor {
       case 'MOVE':
         const targetPos = action.target as Position;
         return targetPos && 
-               this.calculateDistance(player.position, targetPos) <= FREE_ACTIONS.MOVE.maxRange &&
+               this.calculateDistance(player.position, targetPos) <= 1 &&
                this.gameMap.isValidPosition(targetPos) &&
                !this.gameMap.isOccupied(targetPos);
       
@@ -292,7 +300,7 @@ export class FreeActionProcessor {
 
     switch (actionType) {
       case 'MOVE':
-        return this.gameMap.getValidMovePositions(player.position, FREE_ACTIONS.MOVE.maxRange);
+        return this.gameMap.getValidMovePositions(player.position, 1);
       
       case 'BASIC_ATTACK':
         return Array.from(this.players.values())
@@ -307,22 +315,62 @@ export class FreeActionProcessor {
         return [];
     }
   }
+
+  /**
+   * Update the processor with current dungeon data
+   */
+  updateDungeonData(dungeonCells: any[][] | null, width?: number, height?: number): void {
+    this.gameMap.updateDungeonData(dungeonCells, width, height);
+  }
 }
 
 /**
- * Simplified game map for tracking player positions
+ * Game map with dungeon integration for movement validation
  */
 class GameMap {
   private occupiedPositions = new Map<string, PlayerId>();
-  private readonly mapWidth = 20;
-  private readonly mapHeight = 20;
+  private dungeonCells: any[][] | null = null;
+  private mapWidth = 20;
+  private mapHeight = 20;
 
   /**
-   * Check if a position is valid (within map bounds)
+   * Update the map with current dungeon data
+   */
+  updateDungeonData(dungeonCells: any[][] | null, width?: number, height?: number): void {
+    this.dungeonCells = dungeonCells;
+    if (width && height) {
+      this.mapWidth = width;
+      this.mapHeight = height;
+    }
+  }
+
+  /**
+   * Check if a position is valid (within map bounds and not a wall)
    */
   isValidPosition(position: Position): boolean {
-    return position.x >= 0 && position.x < this.mapWidth &&
-           position.y >= 0 && position.y < this.mapHeight;
+    // Check map bounds
+    if (position.x < 0 || position.x >= this.mapWidth ||
+        position.y < 0 || position.y >= this.mapHeight) {
+      return false;
+    }
+
+    // If we have dungeon data, check if the cell is walkable
+    if (this.dungeonCells && 
+        position.x >= 0 && position.x < this.dungeonCells.length &&
+        this.dungeonCells[position.x] && 
+        position.y >= 0 && position.y < this.dungeonCells[position.x]!.length) {
+      const cell = this.dungeonCells[position.x]![position.y];
+      if (cell) {
+        const cellType = cell.type || cell;
+        
+        // Players can walk on floor tiles, doors, stairs, but not walls
+        const walkableTiles = ['floor', 'door', 'stairs_up', 'stairs_down', 'trap', 'treasure'];
+        return walkableTiles.includes(cellType);
+      }
+    }
+
+    // Fallback if no dungeon data - assume it's valid within bounds
+    return true;
   }
 
   /**

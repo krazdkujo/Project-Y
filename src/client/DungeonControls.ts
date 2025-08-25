@@ -11,8 +11,8 @@
  * - Accessible UI components with proper ARIA labeling
  */
 
-import { GameRenderer } from './GameRenderer.js';
-import { DungeonThemeType, AlgorithmType, DungeonConfig } from '../shared/DungeonTypes.js';
+import { GameRenderer } from './GameRenderer';
+import { DungeonThemeType, AlgorithmType, DungeonConfig } from '../shared/DungeonTypes';
 
 export interface DungeonControlsConfig {
   containerId: string;
@@ -184,7 +184,12 @@ export class DungeonControls {
     const algorithmNames: Record<AlgorithmType, string> = {
       'bsp': 'Binary Space Partitioning',
       'cellular_automata': 'Cellular Automata',
-      'hybrid': 'Hybrid (BSP + Cellular)'
+      'hybrid': 'Hybrid (BSP + Cellular)',
+      'maze': 'Maze Generation',
+      'rooms_corridors': 'Rooms & Corridors',
+      'voronoi': 'Voronoi Diagrams',
+      'drunken_walk': 'Drunken Walk',
+      'recursive_division': 'Recursive Division'
     };
     
     return algorithms.map(algorithm => {
@@ -199,6 +204,14 @@ export class DungeonControls {
    */
   private formatThemeName(theme: DungeonThemeType): string {
     const themeNames: Record<DungeonThemeType, string> = {
+      'classic': '🏰 Classic Dungeon',
+      'volcanic': '🌋 Volcanic',
+      'ice_cavern': '🧊 Ice Cavern', 
+      'forest': '🌲 Forest',
+      'desert': '🏜️ Desert',
+      'underdark': '🕳️ Underdark',
+      'mechanical': '⚙️ Mechanical',
+      'ethereal': '✨ Ethereal',
       'fire_caverns': '🔥 Fire Caverns',
       'ice_crystal_caves': '❄️ Ice Crystal Caves',
       'shadow_crypts': '🌑 Shadow Crypts',
@@ -667,6 +680,8 @@ export class DungeonControls {
     return {
       theme: this.currentTheme,
       algorithm: this.currentAlgorithm,
+      width: this.currentSize.width,
+      height: this.currentSize.height,
       size: this.currentSize,
       seed: Math.floor(Math.random() * 1000000)
     };

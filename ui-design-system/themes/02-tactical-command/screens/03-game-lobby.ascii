@@ -1,0 +1,38 @@
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                   MISSION BRIEFING ROOM                  ┃     ╔══════════════════╗ ┃
+┃                                                          ┃     ║  OPERATION SPECS ┃ ┃
+┃  OPERATION: "CRIMSON STORM" [ID: TANGO-247]              ┃     ╠══════════════════╣ ┃
+┃  COMMANDER: Alpha-Leader    SQUAD: 6/8        [SECURE]   ┃     ║ Max Units: 8     ┃ ┃
+┃                                                          ┃     ║ Threat Level: 4  ┃ ┃
+┃  ┏━━━━━━━━━━━━━━━ UNIT ROSTER ━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃     ║ ROE: Weapons Hot ┃ ┃
+┃  ┃ [1] ▶ Alpha-Leader    COMMANDER    [READY] [HOST]   ┃ ┃     ║ Duration: ~3h    ┃ ┃
+┃  ┃ [2] ▶ Bravo-Six      ASSAULT      [READY]          ┃ ┃     ║ Extraction: 500$ ┃ ┃
+┃  ┃ [3] ▶ Charlie-Tango   SNIPER      [READY]          ┃ ┃     ╚══════════════════╝ ┃
+┃  ┃ [4] ▶ Delta-Medic    SUPPORT     [READY]          ┃ ┃                          ┃
+┃  ┃ [5] ○ Echo-Demo      DEMOLITIONS [STANDBY]        ┃ ┃     ╔══════════════════╗ ┃
+┃  ┃ [6] ○ Foxtrot-Heavy  HEAVY GUNS  [STANDBY]        ┃ ┃     ║   TARGET ZONE    ┃ ┃
+┃  ┃ [7] - [UNIT NEEDED] ___________   [______]         ┃ ┃     ╠══════════════════╣ ┃
+┃  ┃ [8] - [UNIT NEEDED] ___________   [______]         ┃ ┃     ║ Sector: GRID-X7  ┃ ┃
+┃  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃     ║ Depth: 15 Levels ┃ ┃
+┃                                                          ┃     ║ ETA: 0300 Hours  ┃ ┃
+┃  ┏━━━━━━━━━━━━━━━━ COMMS CHATTER ━━━━━━━━━━━━━━━━━━━━━━┓ ┃     ║ Objective: HVT   ┃ ┃
+┃  ┃ Alpha-Leader: All units check in for briefing      ┃ ┃     ║ Intel: 85% conf. ┃ ┃
+┃  ┃ Bravo-Six: Weapons hot, ready to breach           ┃ ┃     ╚══════════════════╝ ┃
+┃  ┃ Charlie-Tango: Overwatch position secured         ┃ ┃                          ┃
+┃  ┃ Delta-Medic: Medical supplies loaded and ready    ┃ ┃     ╔══════════════════╗ ┃
+┃  ┃ Echo-Demo: C4 charges armed, standing by          ┃ ┃     ║   UNIT ACTIONS   ┃ ┃
+┃  ┃ Foxtrot-Heavy: Heavy weapons online               ┃ ┃     ╠══════════════════╣ ┃
+┃  ┃ [YOU]: Copy that, checking gear one final time    ┃ ┃     ║ [READY] Status   ┃ ┃
+┃  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃     ║ [COMMS] Radio    ┃ ┃
+┃                                                          ┃     ║ [RECRUIT] Find   ┃ ┃
+┃  TACTICAL INPUT: [Roger, mission is a go!_______]        ┃     ║ [DISMISS] Remove ┃ ┃
+┃                                                          ┃     ║ [CONFIG] Setup   ┃ ┃
+┃  STATUS: ○ STANDBY  [READY] Toggle  [ABORT] Scrub Op    ┃     ║ [ABORT] Cancel   ┃ ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+COMMAND CONTROLS:
+[READY] Change status       [ENTER] Send transmission [ABORT] Abort mission
+[RECRUIT] Find unit        [DISMISS] Remove unit     [CONFIG] Op parameters
+
+Unit Status: ▶ Ready   ○ Standby   - Position Open
+Commander can initiate when 4+ units ready for deployment

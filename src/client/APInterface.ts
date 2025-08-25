@@ -5,7 +5,8 @@ import { ActionSelector } from './ActionSelector';
 import { NetworkClient } from './NetworkClient';
 
 /**
- * Turn-based UI management for the AP System
+ * ASCII Turn-based UI management for the AP System
+ * Pure ASCII interface integrated with GameRenderer
  * Handles turn display, AP tracking, initiative order, and player status
  */
 export class APInterface {
@@ -26,12 +27,12 @@ export class APInterface {
   private turnTimer: NodeJS.Timeout | null = null;
   private warningShown = false;
   
-  // Display elements
-  private readonly TURN_INDICATOR_ID = 'turn-indicator';
-  private readonly AP_DISPLAY_ID = 'ap-display';
-  private readonly INITIATIVE_ORDER_ID = 'initiative-order';
-  private readonly MESSAGE_LOG_ID = 'message-log';
-  private readonly TURN_TIMER_ID = 'turn-timer';
+  // ASCII Display areas (integrated with GameRenderer)
+  private currentTurnDisplay = '';
+  private initiativeDisplay = '';
+  private messageLogDisplay = '';
+  private turnTimerDisplay = '';
+  private apDisplayText = '';
 
   constructor(renderer: GameRenderer, actionSelector: ActionSelector, networkClient: NetworkClient) {
     this.renderer = renderer;
@@ -46,138 +47,173 @@ export class APInterface {
   }
 
   /**
-   * Initialize UI elements and event handlers
+   * Initialize ASCII UI integration with GameRenderer
    */
   private initializeUI(): void {
-    // Create turn indicator
-    this.createTurnIndicator();
-    
-    // Create AP display
-    this.createAPDisplay();
-    
-    // Create initiative order display
-    this.createInitiativeOrderDisplay();
-    
-    // Create message log
-    this.createMessageLog();
-    
-    // Create turn timer
-    this.createTurnTimer();
+    // Initialize ASCII display content
+    this.currentTurnDisplay = this.generateTurnIndicatorASCII();
+    this.initiativeDisplay = this.generateInitiativeOrderASCII();
+    this.messageLogDisplay = this.generateMessageLogASCII();
+    this.turnTimerDisplay = this.generateTurnTimerASCII();
+    this.apDisplayText = this.generateAPDisplayASCII();
     
     // Setup action selector callbacks
     this.actionSelector.onActionSelected(this.handleActionSelected.bind(this));
     this.actionSelector.onTurnEnd(this.handleTurnEnd.bind(this));
+    
+    // Register with GameRenderer to display ASCII UI
+    this.renderer.setUIOverlay(this.generateFullUIOverlay.bind(this));
   }
 
   /**
-   * Create turn indicator UI element
+   * Generate ASCII turn indicator display
    */
-  private createTurnIndicator(): void {
-    const indicator = document.createElement('div');
-    indicator.id = this.TURN_INDICATOR_ID;
-    indicator.className = 'turn-indicator';
-    indicator.innerHTML = `
-      <div class="current-player">
-        <span class="label">Current Turn:</span>
-        <span class="player-name">Waiting for game...</span>
-      </div>
-      <div class="turn-status">
-        <span class="status">Lobby</span>
-      </div>
-    `;
-    
-    const container = document.getElementById('ui-container');
-    if (container) {
-      container.appendChild(indicator);
+  private generateTurnIndicatorASCII(): string {
+    if (!this.turnState || !this.players.size) {
+      return `
+╔═══════════════════════╗
+║     TURN STATUS       ║
+╠═══════════════════════╣
+║ Waiting for game...   ║
+║ Status: Lobby         ║
+╚═══════════════════════╝`;
     }
+
+    const currentEntry = this.turnState.turnOrder[this.turnState.currentTurnIndex];
+    if (!currentEntry) {
+      return this.generateTurnIndicatorASCII(); // Fallback to waiting state
+    }
+    
+    const currentPlayer = this.players.get(currentEntry.playerId);
+    const playerName = currentPlayer ? currentPlayer.name : currentEntry.playerId;
+    const truncatedName = this.padString(playerName, 13);
+    const status = this.isMyTurn ? 'YOUR TURN' : 'WAITING';
+    const statusPadded = this.padString(status, 13);
+    
+    return `
+╔═══════════════════════╗
+║     TURN STATUS       ║
+╠═══════════════════════╣
+║ Player: ${truncatedName} ║
+║ Status: ${statusPadded} ║
+║ ${this.isMyTurn ? '▶ TAKE ACTION!' : '  Waiting...'      } ║
+╚═══════════════════════╝`;
   }
 
   /**
-   * Create AP display UI element
+   * Generate ASCII AP display
    */
-  private createAPDisplay(): void {
-    const display = document.createElement('div');
-    display.id = this.AP_DISPLAY_ID;
-    display.className = 'ap-display';
-    display.innerHTML = `
-      <div class="ap-header">Action Points</div>
-      <div class="ap-current">
-        <span class="ap-value">0</span>
-        <span class="ap-max">/ ${AP_SYSTEM.MAX_AP}</span>
-      </div>
-      <div class="ap-bar">
-        <div class="ap-fill" style="width: 0%"></div>
-      </div>
-      <div class="ap-generation">+${AP_SYSTEM.DEFAULT_AP_PER_TURN} per turn</div>
-    `;
+  private generateAPDisplayASCII(): string {
+    const playerId = this.networkClient.getPlayerId();
+    const currentAP = this.apState?.playerAP.get(playerId) ?? 0;
+    const apPercent = currentAP / AP_SYSTEM.MAX_AP;
+    const apBar = this.generateASCIIBar(apPercent, 15, '█', '░');
     
-    const container = document.getElementById('ui-container');
-    if (container) {
-      container.appendChild(display);
-    }
+    return `
+╔═══════════════════════╗
+║    ACTION POINTS      ║
+╠═══════════════════════╣
+║ Current: ${this.padNumber(currentAP, 1)}/${AP_SYSTEM.MAX_AP}         ║
+║ ${apBar} ║
+║ +${AP_SYSTEM.DEFAULT_AP_PER_TURN} per turn         ║
+╚═══════════════════════╝`;
   }
 
   /**
-   * Create initiative order display
+   * Generate ASCII initiative order display
    */
-  private createInitiativeOrderDisplay(): void {
-    const display = document.createElement('div');
-    display.id = this.INITIATIVE_ORDER_ID;
-    display.className = 'initiative-order';
-    display.innerHTML = `
-      <div class="initiative-header">Initiative Order</div>
-      <div class="initiative-list">
-        <div class="no-players">Waiting for players...</div>
-      </div>
-    `;
+  private generateInitiativeOrderASCII(): string {
+    const initiativeOrder = this.turnState?.turnOrder ?? [];
     
-    const container = document.getElementById('ui-container');
-    if (container) {
-      container.appendChild(display);
+    if (initiativeOrder.length === 0) {
+      return `
+╔═══════════════════════╗
+║   INITIATIVE ORDER    ║
+╠═══════════════════════╣
+║ Waiting for players...║
+╚═══════════════════════╝`;
     }
+    
+    let display = `
+╔═══════════════════════╗
+║   INITIATIVE ORDER    ║
+╠═══════════════════════╣`;
+    
+    initiativeOrder.forEach((entry: InitiativeEntry, index: number) => {
+      const player = this.players.get(entry.playerId);
+      const playerName = player ? player.name : entry.playerId;
+      const isCurrent = this.turnState?.currentTurnIndex === index;
+      const isMe = entry.playerId === this.networkClient.getPlayerId();
+      
+      const nameDisplay = this.padString(playerName, 8);
+      const initDisplay = this.padNumber(entry.initiative, 2);
+      const indicator = isCurrent ? '▶' : ' ';
+      const highlight = isMe ? '*' : ' ';
+      
+      display += `\n║${highlight}${indicator} ${nameDisplay} ${initDisplay} ${highlight}║`;
+    });
+    
+    display += '\n╚═══════════════════════╝';
+    return display;
   }
 
   /**
-   * Create message log display
+   * Generate ASCII message log display
    */
-  private createMessageLog(): void {
-    const log = document.createElement('div');
-    log.id = this.MESSAGE_LOG_ID;
-    log.className = 'message-log';
-    log.innerHTML = `
-      <div class="log-header">Game Log</div>
-      <div class="log-messages">
-        <div class="log-message">Welcome to the AP System!</div>
-        <div class="log-message">Waiting for game to start...</div>
-        <div class="log-message">Use arrow keys to move, spacebar to attack</div>
-      </div>
-    `;
+  private generateMessageLogASCII(): string {
+    let display = `
+╔═══════════════════════╗
+║      GAME LOG         ║
+╠═══════════════════════╣`;
     
-    const container = document.getElementById('ui-container');
-    if (container) {
-      container.appendChild(log);
+    if (this.messageLog.length === 0) {
+      display += '\n║ Welcome to AP System! ║';
+      display += '\n║ Waiting for game...   ║';
+      display += '\n║ Use WASD to move      ║';
+    } else {
+      // Pad to 3 lines, show last 3 messages
+      const paddedMessages = [...this.messageLog];
+      while (paddedMessages.length < 3) {
+        paddedMessages.unshift('');
+      }
+      
+      paddedMessages.slice(-3).forEach(msg => {
+        const truncated = msg.length > 21 ? msg.substring(0, 18) + '...' : msg;
+        const padded = this.padString(truncated, 21);
+        display += `\n║ ${padded} ║`;
+      });
     }
+    
+    display += '\n╚═══════════════════════╝';
+    return display;
   }
 
   /**
-   * Create turn timer display
+   * Generate ASCII turn timer display
    */
-  private createTurnTimer(): void {
-    const timer = document.createElement('div');
-    timer.id = this.TURN_TIMER_ID;
-    timer.className = 'turn-timer';
-    timer.innerHTML = `
-      <div class="timer-label">Turn Time</div>
-      <div class="timer-bar">
-        <div class="timer-fill" style="width: 100%"></div>
-      </div>
-      <div class="timer-value">0s</div>
-    `;
+  private generateTurnTimerASCII(): string {
+    const seconds = Math.ceil(this.turnTimeRemaining / 1000);
+    const percentage = (this.turnTimeRemaining / AP_SYSTEM.TURN_TIME_LIMIT) * 100;
+    const timerBar = this.generateASCIIBar(percentage / 100, 15, '█', '▓');
     
-    const container = document.getElementById('ui-container');
-    if (container) {
-      container.appendChild(timer);
+    // Color indicator based on time remaining
+    let indicator = '●';
+    if (percentage < 30) {
+      indicator = '🔴'; // Critical
+    } else if (percentage < 60) {
+      indicator = '🟡'; // Warning  
+    } else {
+      indicator = '🟢'; // Good
     }
+    
+    return `
+╔═══════════════════════╗
+║     TURN TIMER        ║
+╠═══════════════════════╣
+║ ${indicator} Time: ${this.padNumber(seconds, 2)}s         ║
+║ ${timerBar} ║
+║ ${percentage < 30 ? '⚠️ HURRY UP!' : 'Take your time'   } ║
+╚═══════════════════════╝`;
   }
 
   /**
@@ -327,34 +363,12 @@ export class APInterface {
   }
 
   /**
-   * Update turn timer display
+   * Update turn timer display (ASCII)
    */
   private updateTurnTimerDisplay(): void {
-    const timerElement = document.getElementById(this.TURN_TIMER_ID);
-    if (!timerElement) return;
-    
-    const seconds = Math.ceil(this.turnTimeRemaining / 1000);
-    const percentage = (this.turnTimeRemaining / AP_SYSTEM.TURN_TIME_LIMIT) * 100;
-    
-    const valueElement = timerElement.querySelector('.timer-value');
-    const fillElement = timerElement.querySelector('.timer-fill') as HTMLElement;
-    
-    if (valueElement) {
-      valueElement.textContent = `${seconds}s`;
-    }
-    
-    if (fillElement) {
-      fillElement.style.width = `${percentage}%`;
-      
-      // Change color based on time remaining
-      if (percentage < 30) {
-        fillElement.className = 'timer-fill timer-critical';
-      } else if (percentage < 60) {
-        fillElement.className = 'timer-fill timer-warning';
-      } else {
-        fillElement.className = 'timer-fill';
-      }
-    }
+    // Timer display is updated automatically via generateFullUIOverlay
+    // when the GameRenderer refreshes
+    this.turnTimerDisplay = this.generateTurnTimerASCII();
   }
 
   /**
@@ -362,15 +376,7 @@ export class APInterface {
    */
   private showTurnWarning(): void {
     this.addMessageToLog("⚠️ Turn ending soon! Hurry up!");
-    
-    // Flash the turn timer
-    const timerElement = document.getElementById(this.TURN_TIMER_ID);
-    if (timerElement) {
-      timerElement.classList.add('timer-warning-flash');
-      setTimeout(() => {
-        timerElement.classList.remove('timer-warning-flash');
-      }, 2000);
-    }
+    // ASCII display will automatically show warning colors via timer display
   }
 
   /**
@@ -382,97 +388,32 @@ export class APInterface {
   }
 
   /**
-   * Update turn display
+   * Update turn display (ASCII)
    */
   private updateTurnDisplay(): void {
-    const turnElement = document.getElementById(this.TURN_INDICATOR_ID);
-    if (!turnElement || !this.turnState) return;
-    
-    const currentEntry = this.turnState.turnOrder[this.turnState.currentTurnIndex];
-    if (!currentEntry) return;
-    
-    const currentPlayer = this.players.get(currentEntry.playerId);
-    const playerName = currentPlayer ? currentPlayer.name : currentEntry.playerId;
-    
-    const playerNameElement = turnElement.querySelector('.player-name');
-    const statusElement = turnElement.querySelector('.status');
-    
-    if (playerNameElement) {
-      playerNameElement.textContent = playerName;
-    }
-    
-    if (statusElement) {
-      if (this.isMyTurn) {
-        statusElement.textContent = 'Your Turn';
-        statusElement.className = 'status your-turn';
-      } else {
-        statusElement.textContent = 'Waiting';
-        statusElement.className = 'status waiting';
-      }
-    }
+    // Turn display is updated automatically via generateFullUIOverlay
+    this.currentTurnDisplay = this.generateTurnIndicatorASCII();
   }
 
   /**
-   * Update AP display
+   * Update AP display (ASCII)
    */
   private updateAPDisplay(data?: any): void {
-    const apElement = document.getElementById(this.AP_DISPLAY_ID);
-    if (!apElement) return;
-    
-    const playerId = this.networkClient.getPlayerId();
-    const currentAP = data?.ap ?? this.apState?.playerAP.get(playerId) ?? 0;
-    
-    const valueElement = apElement.querySelector('.ap-value');
-    const fillElement = apElement.querySelector('.ap-fill') as HTMLElement;
-    
-    if (valueElement) {
-      valueElement.textContent = currentAP.toString();
-    }
-    
-    if (fillElement) {
-      const percentage = (currentAP / AP_SYSTEM.MAX_AP) * 100;
-      fillElement.style.width = `${percentage}%`;
-    }
+    // AP display is updated automatically via generateFullUIOverlay
+    this.apDisplayText = this.generateAPDisplayASCII();
     
     // Update action selector with current AP
+    const playerId = this.networkClient.getPlayerId();
+    const currentAP = data?.ap ?? this.apState?.playerAP.get(playerId) ?? 0;
     this.actionSelector.updateAvailableActions(currentAP);
   }
 
   /**
-   * Update initiative order display
+   * Update initiative order display (ASCII)
    */
   private updateInitiativeOrder(data?: any): void {
-    const orderElement = document.getElementById(this.INITIATIVE_ORDER_ID);
-    if (!orderElement) return;
-    
-    const listElement = orderElement.querySelector('.initiative-list');
-    if (!listElement) return;
-    
-    const initiativeOrder = data?.order ?? this.turnState?.turnOrder ?? [];
-    
-    if (initiativeOrder.length === 0) {
-      listElement.innerHTML = '<div class="no-players">Waiting for players...</div>';
-      return;
-    }
-    
-    listElement.innerHTML = '';
-    
-    initiativeOrder.forEach((entry: InitiativeEntry, index: number) => {
-      const player = this.players.get(entry.playerId);
-      const playerName = player ? player.name : entry.playerId;
-      const isCurrent = this.turnState?.currentTurnIndex === index;
-      const isMe = entry.playerId === this.networkClient.getPlayerId();
-      
-      const entryElement = document.createElement('div');
-      entryElement.className = `initiative-entry ${isCurrent ? 'current' : ''} ${isMe ? 'me' : ''}`;
-      entryElement.innerHTML = `
-        <span class="player-name">${playerName}</span>
-        <span class="initiative-value">${entry.initiative}</span>
-        ${isCurrent ? '<span class="current-indicator">▶</span>' : ''}
-      `;
-      
-      listElement.appendChild(entryElement);
-    });
+    // Initiative order is updated automatically via generateFullUIOverlay
+    this.initiativeDisplay = this.generateInitiativeOrderASCII();
   }
 
   /**
@@ -539,7 +480,7 @@ export class APInterface {
   }
 
   /**
-   * Add message to the log
+   * Add message to the log (ASCII)
    */
   private addMessageToLog(message: string): void {
     this.messageLog.push(message);
@@ -549,23 +490,8 @@ export class APInterface {
       this.messageLog = this.messageLog.slice(-3);
     }
     
-    // Update display
-    const logElement = document.getElementById(this.MESSAGE_LOG_ID);
-    if (logElement) {
-      const messagesElement = logElement.querySelector('.log-messages');
-      if (messagesElement) {
-        messagesElement.innerHTML = '';
-        this.messageLog.forEach(msg => {
-          const msgElement = document.createElement('div');
-          msgElement.className = 'log-message';
-          msgElement.textContent = msg;
-          messagesElement.appendChild(msgElement);
-        });
-        
-        // Scroll to bottom
-        messagesElement.scrollTop = messagesElement.scrollHeight;
-      }
-    }
+    // Update ASCII display
+    this.messageLogDisplay = this.generateMessageLogASCII();
   }
 
   /**
@@ -581,6 +507,49 @@ export class APInterface {
    */
   public isCurrentPlayerTurn(): boolean {
     return this.isMyTurn;
+  }
+
+  /**
+   * Generate full UI overlay for GameRenderer integration
+   */
+  private generateFullUIOverlay(): string {
+    // Update all ASCII displays
+    this.currentTurnDisplay = this.generateTurnIndicatorASCII();
+    this.apDisplayText = this.generateAPDisplayASCII();
+    this.initiativeDisplay = this.generateInitiativeOrderASCII();
+    this.messageLogDisplay = this.generateMessageLogASCII();
+    this.turnTimerDisplay = this.generateTurnTimerASCII();
+    
+    // Combine all ASCII UI elements
+    return `${this.currentTurnDisplay}
+
+${this.apDisplayText}
+
+${this.initiativeDisplay}
+
+${this.messageLogDisplay}
+
+${this.turnTimerDisplay}`;
+  }
+
+  /**
+   * ASCII utility methods (borrowed from GameRenderer)
+   */
+  private padString(str: string, length: number): string {
+    if (str.length > length) {
+      return str.substring(0, length);
+    }
+    return str + ' '.repeat(length - str.length);
+  }
+
+  private padNumber(num: number, length: number): string {
+    return num.toString().padStart(length, ' ');
+  }
+
+  private generateASCIIBar(percentage: number, width: number, fillChar = '█', emptyChar = '░'): string {
+    const filledWidth = Math.round(percentage * width);
+    const emptyWidth = width - filledWidth;
+    return fillChar.repeat(filledWidth) + emptyChar.repeat(emptyWidth);
   }
 
   /**

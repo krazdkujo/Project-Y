@@ -14,9 +14,13 @@ import {
   FreeAction, 
   APAction, 
   GameMessage,
-  ActionResult 
+  ActionResult,
+  Position
 } from '../shared/types';
 import { GAME_CONFIG, AP_SYSTEM, ERROR_MESSAGES, NETWORK } from '../shared/constants';
+import { DatabaseConnection, supabaseClient, supabaseAdmin } from '../lib/supabase';
+import { DungeonGenerator } from '../game/dungeons/DungeonGenerator';
+import { DungeonConfig } from '../shared/DungeonTypes';
 
 // Load environment variables
 dotenv.config();
@@ -28,18 +32,38 @@ class HathoraAPServer {
   private activeLobbyGames = new Map<RoomId, APGameSession>();
   private playerConnections = new Map<PlayerId, WebSocket>();
   private heartbeatInterval: NodeJS.Timeout | null = null;
+  private databaseConnection: DatabaseConnection;
 
   constructor() {
+    this.databaseConnection = DatabaseConnection.getInstance();
     this.setupHeartbeat();
   }
 
   /**
    * Start the Hathora server with AP system integration
    */
-  startServer(): void {
-    const port = parseInt(process.env.PORT || '8080');
+  async startServer(): Promise<void> {
+    const port = parseInt(process.env.PORT || '3001'); // Use port 3001 to avoid conflicts
     
     console.log(`Starting Tactical ASCII Roguelike AP Server on port ${port}`);
+    
+    // Test database connection before starting server
+    try {
+      console.log('Testing Supabase database connection...');
+      const healthMetrics = await this.databaseConnection.getHealthMetrics();
+      
+      if (healthMetrics.connected) {
+        console.log('✅ Supabase database connection successful');
+        console.log(`   URL: ${healthMetrics.url}`);
+        console.log(`   Admin Access: ${healthMetrics.adminConnected ? '✅' : '❌'}`);
+      } else {
+        console.warn('⚠️  Database connection failed, but server will continue');
+        console.warn('   Game data persistence will not be available');
+      }
+    } catch (error) {
+      console.error('❌ Database connection error:', error);
+      console.warn('   Server will start without database functionality');
+    }
 
     // Create HTTP server first
     const server = http.createServer((req, res) => {
@@ -177,13 +201,22 @@ class HathoraAPServer {
       return false;
     }
 
+    // Find first available floor tile from the generated dungeon
+    const spawnPosition = session.findValidSpawnPosition();
+
     const player: Player = {
       id: playerId,
       name: `Player ${playerId.slice(-4)}`,
-      position: { x: 5, y: 5 }, // Default starting position
+      position: spawnPosition,
       health: GAME_CONFIG.BASE_HEALTH,
       maxHealth: GAME_CONFIG.BASE_HEALTH,
       currentAP: AP_SYSTEM.DEFAULT_AP_PER_TURN,
+      movement: {
+        baseSpeed: 3,
+        currentSpeed: 3,
+        remainingMovement: 3,
+        movementMode: 'walk'
+      },
       skills: {
         combat: 20,
         swords: 15,
@@ -447,6 +480,23 @@ class HathoraAPServer {
   }
 
   /**
+   * Get database connection for use by other components
+   */
+  getDatabaseConnection(): DatabaseConnection {
+    return this.databaseConnection;
+  }
+
+  /**
+   * Get Supabase clients for direct database operations
+   */
+  getSupabaseClients() {
+    return {
+      client: supabaseClient,
+      admin: supabaseAdmin
+    };
+  }
+
+  /**
    * Shutdown server gracefully
    */
   shutdown(): void {
@@ -477,9 +527,13 @@ class APGameSession {
   public readonly turnManager: TurnManager;
   public readonly freeActionProcessor: FreeActionProcessor;
   public readonly apAbilityProcessor: APAbilityProcessor;
+  public readonly dungeonGenerator: DungeonGenerator;
   
   private players = new Map<PlayerId, Player>();
   private gameStarted = false;
+  private currentDungeon: any = null;
+  private enemies = new Map<string, any>();
+  private items = new Map<string, any>();
 
   constructor(
     roomId: RoomId,
@@ -493,9 +547,135 @@ class APGameSession {
     this.turnManager = turnManager;
     this.freeActionProcessor = freeActionProcessor;
     this.apAbilityProcessor = apAbilityProcessor;
+    this.dungeonGenerator = new DungeonGenerator();
+
+    // Generate initial dungeon
+    this.generateDungeon();
 
     // Setup event handlers
     this.setupEventHandlers();
+  }
+
+  /**
+   * Generate a new dungeon with enemies and items
+   */
+  private generateDungeon(): void {
+    const config: DungeonConfig = {
+      width: 60,
+      height: 30,
+      theme: 'classic',
+      algorithm: 'rooms_corridors',
+      roomCount: 8,
+      roomMinSize: 4,
+      roomMaxSize: 12,
+      seed: Math.floor(Math.random() * 1000000)
+    };
+
+    this.currentDungeon = this.dungeonGenerator.generate(config);
+    
+    // Generate enemies
+    this.generateEnemies();
+    
+    // Generate items
+    this.generateItems();
+
+    // Update the FreeActionProcessor with dungeon data
+    this.updateFreeActionProcessorWithDungeon();
+
+    console.log(`Generated dungeon for room ${this.roomId}: ${this.currentDungeon.rooms?.length || 0} rooms`);
+  }
+
+  /**
+   * Generate enemies in the dungeon
+   */
+  private generateEnemies(): void {
+    const enemyTypes = ['goblin', 'orc', 'skeleton', 'troll'];
+    const numEnemies = Math.floor(Math.random() * 8) + 3; // 3-10 enemies
+
+    for (let i = 0; i < numEnemies; i++) {
+      const enemyId = `enemy_${i}`;
+      const enemyType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)] || 'goblin';
+      
+      // Random position in dungeon
+      const x = Math.floor(Math.random() * 60);
+      const y = Math.floor(Math.random() * 30);
+
+      const enemy = {
+        id: enemyId,
+        type: enemyType,
+        position: { x, y },
+        health: 20 + Math.floor(Math.random() * 30),
+        maxHealth: 50,
+        currentAP: 2,
+        symbol: this.getEnemySymbol(enemyType),
+        color: this.getEnemyColor(enemyType)
+      };
+
+      this.enemies.set(enemyId, enemy);
+    }
+
+    console.log(`Generated ${this.enemies.size} enemies`);
+  }
+
+  /**
+   * Generate items in the dungeon
+   */
+  private generateItems(): void {
+    const itemTypes = ['sword', 'shield', 'potion', 'gold', 'key'];
+    const numItems = Math.floor(Math.random() * 12) + 5; // 5-16 items
+
+    for (let i = 0; i < numItems; i++) {
+      const itemId = `item_${i}`;
+      const itemType = itemTypes[Math.floor(Math.random() * itemTypes.length)] || 'sword';
+      
+      // Random position
+      const x = Math.floor(Math.random() * 60);
+      const y = Math.floor(Math.random() * 30);
+
+      const item = {
+        id: itemId,
+        type: itemType,
+        position: { x, y },
+        symbol: this.getItemSymbol(itemType),
+        color: this.getItemColor(itemType),
+        name: this.getItemName(itemType)
+      };
+
+      this.items.set(itemId, item);
+    }
+
+    console.log(`Generated ${this.items.size} items`);
+  }
+
+  private getEnemySymbol(type: string): string {
+    const symbols: Record<string, string> = { goblin: 'g', orc: 'o', skeleton: 's', troll: 'T' };
+    return symbols[type] || 'E';
+  }
+
+  private getEnemyColor(type: string): string {
+    const colors: Record<string, string> = { goblin: '#ff6600', orc: '#cc0000', skeleton: '#cccccc', troll: '#006600' };
+    return colors[type] || '#ff0000';
+  }
+
+  private getItemSymbol(type: string): string {
+    const symbols: Record<string, string> = { sword: '/', shield: ')', potion: '!', gold: '$', key: '-' };
+    return symbols[type] || '?';
+  }
+
+  private getItemColor(type: string): string {
+    const colors: Record<string, string> = { sword: '#c0c0c0', shield: '#8b4513', potion: '#ff00ff', gold: '#ffff00', key: '#ffa500' };
+    return colors[type] || '#ffffff';
+  }
+
+  private getItemName(type: string): string {
+    const names: Record<string, string> = { 
+      sword: 'Iron Sword', 
+      shield: 'Wooden Shield', 
+      potion: 'Health Potion', 
+      gold: 'Gold Coins', 
+      key: 'Dungeon Key' 
+    };
+    return names[type] || 'Unknown Item';
   }
 
   /**
@@ -522,7 +702,11 @@ class APGameSession {
     this.players.set(player.id, player);
     this.apManager.initializePlayer(player.id);
     this.freeActionProcessor.addPlayer(player);
+    
+    // Ensure FreeActionProcessor has current dungeon data
+    this.updateFreeActionProcessorWithDungeon();
   }
+
 
   /**
    * Execute a free action
@@ -634,12 +818,97 @@ class APGameSession {
       timestamp: Date.now()
     };
   }
+
+  /**
+   * Find a valid spawn position from the generated dungeon
+   */
+  findValidSpawnPosition(): Position {
+    // If dungeon hasn't been generated yet or failed, use fallback position
+    if (!this.currentDungeon || !this.currentDungeon.map || !this.currentDungeon.map.cells) {
+      console.warn('No dungeon available for spawn position, using fallback');
+      return { x: 5, y: 5 };
+    }
+
+    const cells = this.currentDungeon.map.cells;
+
+    // First, try to find a floor tile in the first room (entrance)
+    if (this.currentDungeon.rooms && this.currentDungeon.rooms.length > 0) {
+      const entranceRoom = this.currentDungeon.rooms[0];
+      
+      // Look for a floor tile in the entrance room
+      for (let y = entranceRoom.y + 1; y < entranceRoom.y + entranceRoom.height - 1; y++) {
+        for (let x = entranceRoom.x + 1; x < entranceRoom.x + entranceRoom.width - 1; x++) {
+          if (x >= 0 && x < cells.length && y >= 0 && y < cells[0].length) {
+            const cell = cells[x][y];
+            if (cell.type === 'floor') {
+              // Check if position is already occupied by another player
+              if (!this.isPositionOccupied({ x, y })) {
+                return { x, y };
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // If no room available, scan entire dungeon for first floor tile
+    if (cells.length > 0 && cells[0] && cells[0].length > 0) {
+      for (let x = 1; x < cells.length - 1; x++) {
+        for (let y = 1; y < cells[0].length - 1; y++) {
+          const cell = cells[x][y];
+          if (cell && cell.type === 'floor') {
+            // Check if position is already occupied by another player
+            if (!this.isPositionOccupied({ x, y })) {
+              return { x, y };
+            }
+          }
+        }
+      }
+    }
+
+    // Last resort: return center of dungeon (should rarely happen)
+    console.warn('Could not find valid spawn position, using center');
+    const centerX = cells.length > 0 ? Math.floor(cells.length / 2) : 5;
+    const centerY = cells.length > 0 && cells[0] ? Math.floor(cells[0].length / 2) : 5;
+    return { x: centerX, y: centerY };
+  }
+
+  /**
+   * Check if a position is occupied by any player
+   */
+  private isPositionOccupied(position: Position): boolean {
+    for (const [, player] of this.players) {
+      if (player.position.x === position.x && player.position.y === position.y) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Update FreeActionProcessor with current dungeon data
+   */
+  private updateFreeActionProcessorWithDungeon(): void {
+    if (this.currentDungeon && this.currentDungeon.map && this.currentDungeon.map.cells) {
+      const cells = this.currentDungeon.map.cells;
+      const width = this.currentDungeon.map.width || cells.length;
+      const height = this.currentDungeon.map.height || (cells[0] ? cells[0].length : 0);
+      
+      this.freeActionProcessor.updateDungeonData(cells, width, height);
+      console.log(`Updated FreeActionProcessor with dungeon data: ${width}x${height}`);
+    } else {
+      console.warn('No dungeon data available to update FreeActionProcessor');
+    }
+  }
 }
 
 // Start the server if this file is run directly
 if (require.main === module) {
   const server = new HathoraAPServer();
-  server.startServer();
+  server.startServer().catch(error => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
 
   // Graceful shutdown
   process.on('SIGINT', () => {

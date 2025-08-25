@@ -10,9 +10,9 @@
  * - Mini-map navigation for large dungeons
  */
 
-import { GameRenderer } from './GameRenderer.js';
-import { DungeonControls } from './DungeonControls.js';
-import { DungeonConfig, DungeonThemeType, AlgorithmType } from '../shared/DungeonTypes.js';
+import { GameRenderer } from './GameRenderer';
+import { DungeonControls } from './DungeonControls';
+import { DungeonConfig, DungeonThemeType, AlgorithmType } from '../shared/DungeonTypes';
 
 export class DungeonIntegrationExample {
   private gameRenderer: GameRenderer;

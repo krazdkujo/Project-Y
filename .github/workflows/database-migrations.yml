@@ -1,0 +1,327 @@
+name: Database Migrations
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'supabase/migrations-new/**'
+      - 'src/lib/database/**'
+      - '.github/workflows/database-migrations.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'supabase/migrations-new/**'
+      - 'src/lib/database/**'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Validate migration files and test connectivity
+  validate-migrations:
+    name: Validate Migrations
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint migration files
+        run: |
+          echo "Validating migration file syntax..."
+          find supabase/migrations-new -name "*.js" -exec node -c {} \;
+
+      - name: Test database connection and validation
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          NODE_ENV: test
+        run: |
+          npx ts-node src/lib/database/migrations/cli.ts validate
+
+      - name: Check migration status
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          NODE_ENV: test
+        run: |
+          npx ts-node src/lib/database/migrations/cli.ts status
+
+      - name: Test dry-run migration
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          NODE_ENV: test
+        run: |
+          npx ts-node src/lib/database/migrations/cli.ts migrate --dry-run
+
+  # Test migrations on development environment
+  test-development-migrations:
+    name: Test Development Migrations
+    runs-on: ubuntu-latest
+    needs: validate-migrations
+    if: github.ref == 'refs/heads/develop'
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dev_test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dev_test_db
+          NODE_ENV: development
+        run: |
+          npx ts-node src/lib/database/migrations/cli.ts migrate --verbose
+
+      - name: Validate post-migration state
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dev_test_db
+          NODE_ENV: development
+        run: |
+          npx ts-node src/lib/database/migrations/cli.ts status
+          npx ts-node src/lib/database/migrations/cli.ts validate
+
+      - name: Test rollback functionality
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dev_test_db
+          NODE_ENV: development
+        run: |
+          echo "Testing rollback capability (dry-run)..."
+          npx ts-node src/lib/database/migrations/cli.ts rollback --help
+
+  # Deploy to staging environment
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: validate-migrations
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy migrations to staging
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          NODE_ENV: staging
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          chmod +x scripts/deploy-migrations.sh
+          ./scripts/deploy-migrations.sh staging
+
+      - name: Upload deployment logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-migration-logs
+          path: migration-deploy.log
+          retention-days: 30
+
+  # Deploy to production environment
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [validate-migrations, deploy-staging]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create deployment issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Production Migration Deployment - ${context.sha.substring(0, 7)}`,
+              body: `
+                ## Production Database Migration Deployment
+                
+                **Commit:** ${context.sha}
+                **Triggered by:** ${context.actor}
+                **Workflow:** ${context.workflow}
+                
+                **Pre-deployment Checklist:**
+                - [ ] Database backup completed
+                - [ ] Migration validation passed
+                - [ ] Staging deployment successful
+                - [ ] Monitoring alerts configured
+                
+                **Deployment Status:** 🟡 In Progress
+                
+                This issue will be updated with deployment results.
+              `,
+              labels: ['deployment', 'production', 'database']
+            })
+
+      - name: Deploy migrations to production
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          NODE_ENV: production
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          chmod +x scripts/deploy-migrations.sh
+          ./scripts/deploy-migrations.sh production
+
+      - name: Post-deployment validation
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          NODE_ENV: production
+        run: |
+          echo "Running post-deployment validation..."
+          npx ts-node src/lib/database/migrations/cli.ts validate
+          npx ts-node src/lib/database/migrations/cli.ts status
+
+      - name: Upload deployment logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-migration-logs
+          path: migration-deploy.log
+          retention-days: 90
+
+      - name: Notify deployment success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: context.payload.deployment?.id || 0,
+              state: 'success',
+              environment: 'production',
+              description: 'Database migrations deployed successfully'
+            })
+
+      - name: Notify deployment failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: context.payload.deployment?.id || 0,
+              state: 'failure',
+              environment: 'production',
+              description: 'Database migration deployment failed'
+            })
+
+  # Monitor post-deployment health
+  post-deployment-monitoring:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: success() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run health checks
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          NODE_ENV: production
+        run: |
+          echo "Running comprehensive health checks..."
+          npx ts-node src/lib/database/migrations/cli.ts validate
+          
+          # Add additional health checks here:
+          # - Performance metrics
+          # - Data integrity checks
+          # - Index optimization verification
+
+      - name: Generate deployment report
+        run: |
+          echo "# Database Migration Deployment Report" > deployment-report.md
+          echo "" >> deployment-report.md
+          echo "**Date:** $(date)" >> deployment-report.md
+          echo "**Commit:** ${{ github.sha }}" >> deployment-report.md
+          echo "**Environment:** Production" >> deployment-report.md
+          echo "" >> deployment-report.md
+          echo "## Migration Status" >> deployment-report.md
+          echo "\`\`\`" >> deployment-report.md
+          DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }} npx ts-node src/lib/database/migrations/cli.ts status >> deployment-report.md || echo "Status check failed" >> deployment-report.md
+          echo "\`\`\`" >> deployment-report.md
+
+      - name: Upload deployment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report
+          path: deployment-report.md
+          retention-days: 365

@@ -1,0 +1,352 @@
+{
+  "config": {
+    "configFile": "C:\\Dev\\New Test\\playwright.config.ts",
+    "rootDir": "C:/Dev/New Test/tests",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\Dev\\New Test\\tests\\global-setup.ts",
+    "globalTeardown": "C:\\Dev\\New Test\\tests\\global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 3
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "test-results/html-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/test-results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/Dev/New Test/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Dev/New Test/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Dev/New Test/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/Dev/New Test/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Dev/New Test/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "C:/Dev/New Test/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Dev/New Test/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "C:/Dev/New Test/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Dev/New Test/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "C:/Dev/New Test/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Dev/New Test/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "Microsoft Edge",
+        "name": "Microsoft Edge",
+        "testDir": "C:/Dev/New Test/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Dev/New Test/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "Google Chrome",
+        "name": "Google Chrome",
+        "testDir": "C:/Dev/New Test/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.0",
+    "workers": 16,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true,
+      "timeout": 60000
+    }
+  },
+  "suites": [
+    {
+      "title": "login-screen-alignment.spec.ts",
+      "file": "login-screen-alignment.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Login Screen Alignment Tests",
+          "file": "login-screen-alignment.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should display login screen with proper alignment",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5637,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.ascii-screen')\n\u001b[32m- Expected string  -  1\u001b[39m\n\u001b[31m+ Received string  + 26\u001b[39m\n\n\u001b[32m- Player Name\u001b[39m\n\u001b[31m+ ╔══════════════════════════════════════════════════════════════════════════════╗\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║    ╔═══════════════════════════════════════════════════════════════════╗    ║\u001b[39m\n\u001b[31m+ ║    ║                                                                   ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██████╗  ██████╗  ██████╗ ██╗   ██╗███████╗              ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██╔══██╗██╔═══██╗██╔════╝ ██║   ██║██╔════╝              ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██████╔╝██║   ██║██║  ███╗██║   ██║█████╗                ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██╔══██╗██║   ██║██║   ██║██║   ██║██╔══╝                ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██║  ██║╚██████╔╝╚██████╔╝╚██████╔╝███████╗              ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ╚═╝  ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝              ║    ║\u001b[39m\n\u001b[31m+ ║    ║                                                                   ║    ║\u001b[39m\n\u001b[31m+ ║    ║                    ASCII TACTICAL ROGUELIKE                       ║    ║\u001b[39m\n\u001b[31m+ ║    ║                                                                   ║    ║\u001b[39m\n\u001b[31m+ ║    ╚═══════════════════════════════════════════════════════════════════╝    ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                          [_r name...][/color]        ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                          [default         ]          ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                        [ Co[ Connect to Game ]       ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║ [color:#ffffff]       Press TAB/ARROWS to navigate • ENTER to select • ESC to\u001b[43m \u001b[49m\u001b[39m\n\u001b[31m+ ║  Press TAB to navigate • ENTER to select • ESC to cancel                    ║\u001b[39m\n\u001b[31m+ ╚══════════════════════════════════════════════════════════════════════════════╝\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.ascii-screen')\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"ascii-screen\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"╔══════════════════════════════════════════════════════════════════════════════╗\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║    ╔═══════════════════════════════════════════════════════════════════╗    ║\u001b[22m\n\u001b[2m║    ║                                                                   ║    ║\u001b[22m\n\u001b[2m║    ║          ██████╗  ██████╗  ██████╗ ██╗   ██╗███████╗              ║    ║\u001b[22m\n\u001b[2m║    ║          ██╔══██╗██╔═══██╗██╔════╝ ██║   ██║██╔════╝              ║    ║\u001b[22m\n\u001b[2m║    ║          ██████╔╝██║   ██║██║  ███╗██║   ██║█████╗                ║    ║\u001b[22m\n\u001b[2m║    ║          ██╔══██╗██║   ██║██║   ██║██║   ██║██╔══╝                ║    ║\u001b[22m\n\u001b[2m║    ║          ██║  ██║╚██████╔╝╚██████╔╝╚██████╔╝███████╗              ║    ║\u001b[22m\n\u001b[2m║    ║          ╚═╝  ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝              ║    ║\u001b[22m\n\u001b[2m║    ║                                                                   ║    ║\u001b[22m\n\u001b[2m║    ║                    ASCII TACTICAL ROGUELIKE                       ║    ║\u001b[22m\n\u001b[2m║    ║                                                                   ║    ║\u001b[22m\n\u001b[2m║    ╚═══════════════════════════════════════════════════════════════════╝    ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                          [_r name...][/color]        ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                          [default         ]          ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                        [ Co[ Connect to Game ]       ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║ [color:#ffffff]       Press TAB/ARROWS to navigate • ENTER to select • ESC to \u001b[22m\n\u001b[2m║  Press TAB to navigate • ENTER to select • ESC to cancel                    ║\u001b[22m\n\u001b[2m╚══════════════════════════════════════════════════════════════════════════════╝\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.ascii-screen')\n\u001b[32m- Expected string  -  1\u001b[39m\n\u001b[31m+ Received string  + 26\u001b[39m\n\n\u001b[32m- Player Name\u001b[39m\n\u001b[31m+ ╔══════════════════════════════════════════════════════════════════════════════╗\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║    ╔═══════════════════════════════════════════════════════════════════╗    ║\u001b[39m\n\u001b[31m+ ║    ║                                                                   ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██████╗  ██████╗  ██████╗ ██╗   ██╗███████╗              ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██╔══██╗██╔═══██╗██╔════╝ ██║   ██║██╔════╝              ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██████╔╝██║   ██║██║  ███╗██║   ██║█████╗                ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██╔══██╗██║   ██║██║   ██║██║   ██║██╔══╝                ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██║  ██║╚██████╔╝╚██████╔╝╚██████╔╝███████╗              ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ╚═╝  ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝              ║    ║\u001b[39m\n\u001b[31m+ ║    ║                                                                   ║    ║\u001b[39m\n\u001b[31m+ ║    ║                    ASCII TACTICAL ROGUELIKE                       ║    ║\u001b[39m\n\u001b[31m+ ║    ║                                                                   ║    ║\u001b[39m\n\u001b[31m+ ║    ╚═══════════════════════════════════════════════════════════════════╝    ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                          [_r name...][/color]        ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                          [default         ]          ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                        [ Co[ Connect to Game ]       ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║ [color:#ffffff]       Press TAB/ARROWS to navigate • ENTER to select • ESC to\u001b[43m \u001b[49m\u001b[39m\n\u001b[31m+ ║  Press TAB to navigate • ENTER to select • ESC to cancel                    ║\u001b[39m\n\u001b[31m+ ╚══════════════════════════════════════════════════════════════════════════════╝\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.ascii-screen')\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"ascii-screen\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"╔══════════════════════════════════════════════════════════════════════════════╗\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║    ╔═══════════════════════════════════════════════════════════════════╗    ║\u001b[22m\n\u001b[2m║    ║                                                                   ║    ║\u001b[22m\n\u001b[2m║    ║          ██████╗  ██████╗  ██████╗ ██╗   ██╗███████╗              ║    ║\u001b[22m\n\u001b[2m║    ║          ██╔══██╗██╔═══██╗██╔════╝ ██║   ██║██╔════╝              ║    ║\u001b[22m\n\u001b[2m║    ║          ██████╔╝██║   ██║██║  ███╗██║   ██║█████╗                ║    ║\u001b[22m\n\u001b[2m║    ║          ██╔══██╗██║   ██║██║   ██║██║   ██║██╔══╝                ║    ║\u001b[22m\n\u001b[2m║    ║          ██║  ██║╚██████╔╝╚██████╔╝╚██████╔╝███████╗              ║    ║\u001b[22m\n\u001b[2m║    ║          ╚═╝  ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝              ║    ║\u001b[22m\n\u001b[2m║    ║                                                                   ║    ║\u001b[22m\n\u001b[2m║    ║                    ASCII TACTICAL ROGUELIKE                       ║    ║\u001b[22m\n\u001b[2m║    ║                                                                   ║    ║\u001b[22m\n\u001b[2m║    ╚═══════════════════════════════════════════════════════════════════╝    ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                          [_r name...][/color]        ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                          [default         ]          ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                        [ Co[ Connect to Game ]       ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║ [color:#ffffff]       Press TAB/ARROWS to navigate • ENTER to select • ESC to \u001b[22m\n\u001b[2m║  Press TAB to navigate • ENTER to select • ESC to cancel                    ║\u001b[22m\n\u001b[2m╚══════════════════════════════════════════════════════════════════════════════╝\"\u001b[22m\n\n    at C:\\Dev\\New Test\\tests\\login-screen-alignment.spec.ts:29:31",
+                        "location": {
+                          "file": "C:\\Dev\\New Test\\tests\\login-screen-alignment.spec.ts",
+                          "column": 31,
+                          "line": 29
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 27 |\u001b[39m     \u001b[90m// Verify the login screen contains expected elements\u001b[39m\n \u001b[90m 28 |\u001b[39m     \u001b[36mawait\u001b[39m expect(asciiScreen)\u001b[33m.\u001b[39mtoContainText(\u001b[32m'ROGUE'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 29 |\u001b[39m     \u001b[36mawait\u001b[39m expect(asciiScreen)\u001b[33m.\u001b[39mtoContainText(\u001b[32m'Player Name'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 30 |\u001b[39m     \u001b[36mawait\u001b[39m expect(asciiScreen)\u001b[33m.\u001b[39mtoContainText(\u001b[32m'Room ID'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 31 |\u001b[39m     \u001b[36mawait\u001b[39m expect(asciiScreen)\u001b[33m.\u001b[39mtoContainText(\u001b[32m'Connect to Game'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 32 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Dev\\New Test\\tests\\login-screen-alignment.spec.ts",
+                            "column": 31,
+                            "line": 29
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.ascii-screen')\n\u001b[32m- Expected string  -  1\u001b[39m\n\u001b[31m+ Received string  + 26\u001b[39m\n\n\u001b[32m- Player Name\u001b[39m\n\u001b[31m+ ╔══════════════════════════════════════════════════════════════════════════════╗\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║    ╔═══════════════════════════════════════════════════════════════════╗    ║\u001b[39m\n\u001b[31m+ ║    ║                                                                   ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██████╗  ██████╗  ██████╗ ██╗   ██╗███████╗              ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██╔══██╗██╔═══██╗██╔════╝ ██║   ██║██╔════╝              ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██████╔╝██║   ██║██║  ███╗██║   ██║█████╗                ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██╔══██╗██║   ██║██║   ██║██║   ██║██╔══╝                ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ██║  ██║╚██████╔╝╚██████╔╝╚██████╔╝███████╗              ║    ║\u001b[39m\n\u001b[31m+ ║    ║          ╚═╝  ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝              ║    ║\u001b[39m\n\u001b[31m+ ║    ║                                                                   ║    ║\u001b[39m\n\u001b[31m+ ║    ║                    ASCII TACTICAL ROGUELIKE                       ║    ║\u001b[39m\n\u001b[31m+ ║    ║                                                                   ║    ║\u001b[39m\n\u001b[31m+ ║    ╚═══════════════════════════════════════════════════════════════════╝    ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                          [_r name...][/color]        ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                          [default         ]          ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║                        [ Co[ Connect to Game ]       ║\u001b[39m\n\u001b[31m+ ║                                                                              ║\u001b[39m\n\u001b[31m+ ║ [color:#ffffff]       Press TAB/ARROWS to navigate • ENTER to select • ESC to\u001b[43m \u001b[49m\u001b[39m\n\u001b[31m+ ║  Press TAB to navigate • ENTER to select • ESC to cancel                    ║\u001b[39m\n\u001b[31m+ ╚══════════════════════════════════════════════════════════════════════════════╝\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.ascii-screen')\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"ascii-screen\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"╔══════════════════════════════════════════════════════════════════════════════╗\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║    ╔═══════════════════════════════════════════════════════════════════╗    ║\u001b[22m\n\u001b[2m║    ║                                                                   ║    ║\u001b[22m\n\u001b[2m║    ║          ██████╗  ██████╗  ██████╗ ██╗   ██╗███████╗              ║    ║\u001b[22m\n\u001b[2m║    ║          ██╔══██╗██╔═══██╗██╔════╝ ██║   ██║██╔════╝              ║    ║\u001b[22m\n\u001b[2m║    ║          ██████╔╝██║   ██║██║  ███╗██║   ██║█████╗                ║    ║\u001b[22m\n\u001b[2m║    ║          ██╔══██╗██║   ██║██║   ██║██║   ██║██╔══╝                ║    ║\u001b[22m\n\u001b[2m║    ║          ██║  ██║╚██████╔╝╚██████╔╝╚██████╔╝███████╗              ║    ║\u001b[22m\n\u001b[2m║    ║          ╚═╝  ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝              ║    ║\u001b[22m\n\u001b[2m║    ║                                                                   ║    ║\u001b[22m\n\u001b[2m║    ║                    ASCII TACTICAL ROGUELIKE                       ║    ║\u001b[22m\n\u001b[2m║    ║                                                                   ║    ║\u001b[22m\n\u001b[2m║    ╚═══════════════════════════════════════════════════════════════════╝    ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                          [_r name...][/color]        ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                          [default         ]          ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║                        [ Co[ Connect to Game ]       ║\u001b[22m\n\u001b[2m║                                                                              ║\u001b[22m\n\u001b[2m║ [color:#ffffff]       Press TAB/ARROWS to navigate • ENTER to select • ESC to \u001b[22m\n\u001b[2m║  Press TAB to navigate • ENTER to select • ESC to cancel                    ║\u001b[22m\n\u001b[2m╚══════════════════════════════════════════════════════════════════════════════╝\"\u001b[22m\n\n\n  27 |     // Verify the login screen contains expected elements\n  28 |     await expect(asciiScreen).toContainText('ROGUE');\n> 29 |     await expect(asciiScreen).toContainText('Player Name');\n     |                               ^\n  30 |     await expect(asciiScreen).toContainText('Room ID');\n  31 |     await expect(asciiScreen).toContainText('Connect to Game');\n  32 |\n    at C:\\Dev\\New Test\\tests\\login-screen-alignment.spec.ts:29:31"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-25T03:17:44.627Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Dev\\New Test\\test-results\\artifacts\\login-screen-alignment-Log-99827-creen-with-proper-alignment-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Dev\\New Test\\test-results\\artifacts\\login-screen-alignment-Log-99827-creen-with-proper-alignment-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Dev\\New Test\\test-results\\artifacts\\login-screen-alignment-Log-99827-creen-with-proper-alignment-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Dev\\New Test\\tests\\login-screen-alignment.spec.ts",
+                        "column": 31,
+                        "line": 29
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "55dc52520951809f9d11-5e21542e17b690077b7f",
+              "file": "login-screen-alignment.spec.ts",
+              "line": 12,
+              "column": 7
+            },
+            {
+              "title": "should handle input field alignment",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 483,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-25T03:17:44.626Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "55dc52520951809f9d11-97a1a6c47e555837bf33",
+              "file": "login-screen-alignment.spec.ts",
+              "line": 68,
+              "column": 7
+            },
+            {
+              "title": "should measure and fix alignment issues",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 452,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "ASCII screen bounding box: { x: \u001b[33m352\u001b[39m, y: \u001b[33m0\u001b[39m, width: \u001b[33m576\u001b[39m, height: \u001b[33m360\u001b[39m }\n"
+                        },
+                        {
+                          "text": "Login screen detailed measurements: {\n  rect: { width: \u001b[33m576\u001b[39m, height: \u001b[33m360\u001b[39m, top: \u001b[33m0\u001b[39m, left: \u001b[33m352\u001b[39m },\n  style: {\n    padding: \u001b[32m'20px'\u001b[39m,\n    margin: \u001b[32m'0px 352px'\u001b[39m,\n    fontSize: \u001b[32m'12px'\u001b[39m,\n    lineHeight: \u001b[32m'14.4px'\u001b[39m,\n    fontFamily: \u001b[32m'\"Courier New\", \"Lucida Console\", monospace'\u001b[39m,\n    letterSpacing: \u001b[32m'normal'\u001b[39m,\n    wordSpacing: \u001b[32m'0px'\u001b[39m\n  }\n}\n"
+                        },
+                        {
+                          "text": "Character dimensions: { charWidth: \u001b[33m7.203125\u001b[39m, charHeight: \u001b[33m12\u001b[39m }\n"
+                        },
+                        {
+                          "text": "Expected dimensions: 576.25x300\n"
+                        },
+                        {
+                          "text": "Actual dimensions: 576x360\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-25T03:17:44.620Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "55dc52520951809f9d11-a87bc633d266795b1434",
+              "file": "login-screen-alignment.spec.ts",
+              "line": 95,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-08-25T03:17:44.071Z",
+    "duration": 6373.108,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

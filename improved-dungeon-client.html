@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dungeon Crawler - Large Map</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #game-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: 100vh;
+            height: 100vh;
+            gap: 0;
+        }
+        
+        #left-panel, #right-panel {
+            background: #000;
+            border: 1px solid #0f0;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+        
+        #left-panel {
+            border-right: 2px solid #0f0;
+        }
+        
+        #right-panel {
+            border-left: 2px solid #0f0;
+        }
+        
+        #map-container {
+            background: #000;
+            border-top: 1px solid #0f0;
+            border-bottom: 1px solid #0f0;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #game-map {
+            line-height: 1.2;
+            letter-spacing: 0.1em;
+            white-space: pre;
+            font-weight: normal;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: block;
+        }
+        
+        .map-cell {
+            cursor: pointer;
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            text-align: center;
+            vertical-align: top;
+        }
+        
+        .map-cell.wall {
+            color: #666;
+            background-color: #222;
+        }
+        
+        .map-cell.selectable {
+            background-color: #003300;
+        }
+        
+        .map-cell.movement-selectable {
+            background-color: #000033;
+            border: 1px solid #00f;
+        }
+        
+        .map-cell.selected {
+            background-color: #006600;
+        }
+        
+        .map-cell.player {
+            color: #0ff;
+            font-weight: bold;
+            background-color: #002;
+        }
+        
+        .map-cell.current-player {
+            color: #ff0;
+            font-weight: bold;
+            background-color: #220;
+        }
+        
+        .map-cell.enemy {
+            color: #f80;
+            font-weight: bold;
+            background-color: #200;
+        }
+        
+        .map-cell.exit {
+            color: #ff0;
+            background-color: #330;
+        }
+        
+        .map-cell.floor {
+            color: #333;
+        }
+        
+        /* Panel sections */
+        .panel-section {
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #0f0;
+            background: #001100;
+        }
+        
+        .panel-section h4 {
+            margin: 0 0 5px 0;
+            color: #ff0;
+            font-size: 12px;
+        }
+        
+        #status {
+            background: #002200;
+        }
+        
+        #dungeon-info {
+            background: #110011;
+            border-color: #f0f;
+        }
+        
+        #turn-info {
+            background: #220011;
+            border-color: #ff0;
+        }
+        
+        .my-turn {
+            background: #002200 !important;
+            border-color: #0f0 !important;
+        }
+        
+        #turn-order {
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        
+        .turn-entry {
+            padding: 1px 0;
+            font-size: 10px;
+        }
+        
+        .turn-entry.current {
+            color: #ff0;
+            font-weight: bold;
+        }
+        
+        .turn-entry.player {
+            color: #0ff;
+        }
+        
+        .turn-entry.enemy {
+            color: #f80;
+        }
+        
+        #skills-panel {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .skill-button {
+            display: block;
+            width: 100%;
+            margin: 2px 0;
+            padding: 4px;
+            background: #001100;
+            color: #0f0;
+            border: 1px solid #0f0;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+        }
+        
+        .skill-button:hover {
+            background: #002200;
+        }
+        
+        .skill-button:disabled {
+            color: #555;
+            border-color: #555;
+            cursor: not-allowed;
+            background: #000;
+        }
+        
+        .skill-button.selected {
+            background: #004400;
+            border-color: #ff0;
+        }
+        
+        #health-bar {
+            width: 100%;
+            height: 15px;
+            border: 1px solid #0f0;
+            margin: 3px 0;
+        }
+        
+        #health-fill {
+            height: 100%;
+            background: #0f0;
+            transition: width 0.3s;
+        }
+        
+        #ap-display {
+            margin: 3px 0;
+            font-size: 11px;
+        }
+        
+        .ap-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border: 1px solid #0f0;
+            margin: 0 1px;
+            background: #0f0;
+        }
+        
+        .ap-dot.empty {
+            background: transparent;
+        }
+        
+        #combat-log {
+            height: 200px;
+            overflow-y: auto;
+            padding: 5px;
+            border: 1px solid #0f0;
+            font-size: 9px;
+            background: #000;
+        }
+        
+        .combat-message {
+            margin: 1px 0;
+            line-height: 1.1;
+        }
+        
+        .damage { color: #ff0; }
+        .kill { color: #f00; }
+        .heal { color: #0ff; }
+        .system { color: #fff; }
+        .room-clear { color: #0f0; font-weight: bold; }
+        
+        .action-button {
+            display: block;
+            width: 100%;
+            margin: 3px 0;
+            padding: 6px;
+            background: #001100;
+            color: #0f0;
+            border: 1px solid #0f0;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+        }
+        
+        .action-button:hover {
+            background: #002200;
+        }
+        
+        .action-button:disabled {
+            color: #555;
+            border-color: #555;
+            cursor: not-allowed;
+            background: #000;
+        }
+        
+        .action-button.progress {
+            background: #003300;
+            color: #ff0;
+        }
+        
+        #target-info {
+            display: none;
+            font-size: 10px;
+        }
+        
+        #instructions {
+            font-size: 9px;
+            line-height: 1.2;
+        }
+        
+        .error { color: #f00; }
+        .connected { color: #0f0; }
+        .phase-exploration { color: #0f0; }
+        .phase-combat { color: #ff0; }
+        
+        .floor-deeper {
+            color: #f80;
+        }
+        
+        /* Map info overlay */
+        #map-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #0f0;
+            padding: 5px;
+            font-size: 10px;
+        }
+        
+        /* New Layout Styles */
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+            font-size: 11px;
+        }
+        
+        #mana-bar {
+            width: 100%;
+            height: 10px;
+            border: 1px solid #00f;
+            margin: 2px 0;
+            background: #000;
+        }
+        
+        #mana-fill {
+            height: 100%;
+            background: #00f;
+            transition: width 0.3s;
+        }
+        
+        .abilities-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2px;
+            font-size: 10px;
+        }
+        
+        .ability-slot {
+            padding: 3px 5px;
+            border: 1px solid #333;
+            background: #001100;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .ability-slot:hover {
+            border-color: #0f0;
+            background: #002200;
+        }
+        
+        .ability-slot.available {
+            border-color: #0f0;
+            background: #001100;
+        }
+        
+        .ability-slot.unavailable {
+            border-color: #555;
+            background: #000;
+            color: #555;
+            cursor: not-allowed;
+        }
+        
+        .ability-slot.selected {
+            border-color: #ff0;
+            background: #220;
+            color: #ff0;
+        }
+        
+        .ability-name {
+            font-weight: bold;
+        }
+        
+        .ability-ap {
+            float: right;
+            color: #888;
+        }
+        
+        .expanded-log {
+            flex: 1;
+            min-height: 300px;
+        }
+        
+        .expanded-log #log-content {
+            height: 350px;
+            overflow-y: auto;
+            font-size: 9px;
+            line-height: 1.3;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+            padding: 1px 3px;
+        }
+        
+        .log-entry.system {
+            color: #fff;
+            font-weight: bold;
+        }
+        
+        .controls-grid {
+            font-size: 9px;
+            line-height: 1.2;
+        }
+        
+        .controls-grid > div {
+            margin: 2px 0;
+        }
+        
+        .legend-section {
+            font-size: 8px;
+            line-height: 1.2;
+        }
+        
+        .legend-section > div {
+            margin: 1px 0;
+        }
+        
+        .small-button {
+            font-size: 8px !important;
+            padding: 2px 4px !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Left Panel -->
+        <div id="left-panel">
+            <!-- Player Status - Expanded -->
+            <div id="player-status" class="panel-section">
+                <h4>Player Status</h4>
+                <div class="status-row">
+                    <div>Status: <span id="connection-state" data-testid="connection-status">Connecting</span></div>
+                </div>
+                <div class="status-row">
+                    <div>Player: <span id="player-id">-</span></div>
+                    <div>Level: <span id="player-level">1</span></div>
+                </div>
+                <div class="status-row">
+                    <div>Health: <span id="player-health">20/20</span></div>
+                    <div>Mana: <span id="player-mana">10/10</span></div>
+                </div>
+                <div id="health-bar">
+                    <div id="health-fill" style="width: 100%"></div>
+                </div>
+                <div id="mana-bar">
+                    <div id="mana-fill" style="width: 100%"></div>
+                </div>
+                <div class="status-row">
+                    <div>AP: <span id="ap-dots"></span></div>
+                </div>
+                <div class="status-row">
+                    <div>Kills: <span id="kills">0</span></div>
+                    <div>Deaths: <span id="deaths">0</span></div>
+                </div>
+                <div class="status-row">
+                    <div><strong>Floor <span id="current-floor">1</span> - Room <span id="current-room">1</span></strong></div>
+                </div>
+                <div class="status-row">
+                    <div>Phase: <span id="game-phase">exploration</span></div>
+                </div>
+                <div id="room-status">Ready to explore</div>
+            </div>
+            
+            <!-- Abilities Section -->
+            <div id="abilities-section" class="panel-section">
+                <h4>Abilities</h4>
+                <div class="abilities-grid">
+                    <div class="ability-slot" data-slot="1">1: <span class="ability-name">Move</span> <span class="ability-ap">(0)</span></div>
+                    <div class="ability-slot" data-slot="2">2: <span class="ability-name">Attack</span> <span class="ability-ap">(0)</span></div>
+                    <div class="ability-slot" data-slot="3">3: <span class="ability-name">Power Attack</span> <span class="ability-ap">(1)</span></div>
+                    <div class="ability-slot" data-slot="4">4: <span class="ability-name">Heal</span> <span class="ability-ap">(2)</span></div>
+                    <div class="ability-slot" data-slot="5">5: <span class="ability-name">Fireball</span> <span class="ability-ap">(3)</span></div>
+                    <div class="ability-slot" data-slot="6">6: <span class="ability-name">-Empty-</span> <span class="ability-ap">(-)</span></div>
+                    <div class="ability-slot" data-slot="7">7: <span class="ability-name">-Empty-</span> <span class="ability-ap">(-)</span></div>
+                    <div class="ability-slot" data-slot="8">8: <span class="ability-name">-Empty-</span> <span class="ability-ap">(-)</span></div>
+                    <div class="ability-slot" data-slot="9">9: <span class="ability-name">-Empty-</span> <span class="ability-ap">(-)</span></div>
+                </div>
+                <div id="turn-info" style="margin-top: 10px;">
+                    <div style="display: none;" id="combat-turn-info">
+                        <div><strong>Current Turn:</strong> <span id="current-turn">-</span></div>
+                        <div>Timer: <span id="turn-timer">30s</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Section - Bottom -->
+            <div id="left-controls" class="panel-section">
+                <h4>Actions</h4>
+                <button class="action-button" id="next-room-btn" onclick="nextRoom()" disabled>Next Room / Down Stairs</button>
+                <button class="action-button" id="end-turn-btn" onclick="endTurn()" disabled style="display: none;">End Turn</button>
+                <div id="target-info" style="margin-top: 8px; display: none;">
+                    <div><strong>Target:</strong> <span id="target-details">None</span></div>
+                    <button onclick="clearTarget()" class="action-button small-button">Clear Target</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Center Map -->
+        <div id="map-container">
+            <div id="map-info">
+                <div>Position: <span id="player-pos">1,1</span></div>
+                <div>Viewport: 30x30</div>
+            </div>
+            <div id="game-map" data-testid="game-map">Connecting...</div>
+        </div>
+        
+        <!-- Right Panel -->
+        <div id="right-panel">
+            <!-- Expanded Adventure Log -->
+            <div id="combat-log" class="panel-section expanded-log" data-testid="combat-log">
+                <h4>Adventure Log</h4>
+                <div id="log-content">
+                    <div class="log-entry system">== Adventure Log ==</div>
+                    <div class="log-entry">Connected to dungeon server</div>
+                    <div class="log-entry">Entered Floor 1, Room 1</div>
+                    <div class="log-entry">2 enemies detected in room</div>
+                </div>
+            </div>
+            
+            <!-- Turn Order (Combat Only) -->
+            <div id="turn-order" class="panel-section" style="display: none;">
+                <h4>Initiative Order</h4>
+                <div id="turn-list"></div>
+            </div>
+            
+            <!-- Skills Panel (Combat Only) -->
+            <div id="skills-panel" class="panel-section" style="display: none;">
+                <h4>Available Skills</h4>
+                <div id="skills-list"></div>
+            </div>
+            
+            <!-- Controls Section - Bottom -->
+            <div id="right-controls" class="panel-section">
+                <h4>Controls</h4>
+                <div class="controls-grid">
+                    <div><strong>Movement:</strong> ↑↓←→ or WASD</div>
+                    <div><strong>Abilities:</strong> Keys 1-9</div>
+                    <div><strong>Combat:</strong> Click targets after selecting ability</div>
+                    <div><strong>Progress:</strong> Clear all enemies to advance</div>
+                </div>
+                <hr style="border-color: #0f0; margin: 5px 0;">
+                <div class="legend-section">
+                    <div><strong>Map Legend:</strong></div>
+                    <div>@ = You · # = Wall · > = Exit · . = Floor</div>
+                    <div>g = Goblin · O = Orc · s = Skeleton · T = Troll</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Game state
+        let ws = null;
+        let playerId = null;
+        let gameState = {
+            players: new Map(),
+            enemies: new Map(),
+            gamePhase: 'exploration',
+            floor: 1,
+            room: 1,
+            roomTemplate: null,
+            turnOrder: [],
+            currentTurn: null,
+            skills: {}
+        };
+        let playerData = null;
+        let selectedSkill = null;
+        let selectedAbilityType = 'combat';
+        let selectedTarget = null;
+        let targetsInRange = [];
+        let validMovementPositions = [];
+        let movementRange = 0;
+        
+        // Camera system for large maps
+        let cameraX = 0;
+        let cameraY = 0;
+        const VIEWPORT_WIDTH = 30;
+        const VIEWPORT_HEIGHT = 30;
+        
+        // Calculate optimal font size to fill the map container
+        function calculateOptimalFontSize() {
+            const mapContainer = document.getElementById('map-container');
+            const containerWidth = mapContainer.clientWidth - 20; // Account for padding
+            const containerHeight = mapContainer.clientHeight - 20;
+            
+            // Calculate font size based on fitting 30x30 grid
+            const fontSizeByWidth = Math.floor(containerWidth / (VIEWPORT_WIDTH * 0.6)); // 0.6 for character width ratio
+            const fontSizeByHeight = Math.floor(containerHeight / (VIEWPORT_HEIGHT * 1.2)); // 1.2 for line height
+            
+            // Use the smaller of the two to ensure fit
+            const fontSize = Math.max(8, Math.min(fontSizeByWidth, fontSizeByHeight));
+            
+            const gameMap = document.getElementById('game-map');
+            gameMap.style.fontSize = fontSize + 'px';
+            gameMap.style.lineHeight = '1.2';
+            
+            return fontSize;
+        }
+        
+        // Add combat log message
+        function addCombatLog(message, type = '') {
+            const logContent = document.getElementById('log-content');
+            const div = document.createElement('div');
+            div.className = `combat-message ${type}`;
+            div.textContent = message;
+            logContent.appendChild(div);
+            
+            // Auto-scroll to bottom
+            const combatLog = document.getElementById('combat-log');
+            combatLog.scrollTop = combatLog.scrollHeight;
+            
+            // Keep only last 50 messages
+            while (logContent.children.length > 51) {
+                logContent.removeChild(logContent.children[1]);
+            }
+        }
+        
+        // Update camera to center on player
+        function updateCamera() {
+            if (!playerData || !gameState.roomTemplate) return;
+            
+            const template = gameState.roomTemplate;
+            
+            // Center camera on player
+            cameraX = Math.max(0, Math.min(template.width - VIEWPORT_WIDTH, 
+                playerData.x - Math.floor(VIEWPORT_WIDTH / 2)));
+            cameraY = Math.max(0, Math.min(template.height - VIEWPORT_HEIGHT, 
+                playerData.y - Math.floor(VIEWPORT_HEIGHT / 2)));
+        }
+        
+        // Connect to server
+        function connect() {
+            ws = new WebSocket(`ws://localhost:3003`);
+            window.ws = ws;
+            
+            ws.onopen = () => {
+                console.log('Connected to dungeon server');
+                document.getElementById('connection-state').textContent = 'Connected';
+                document.getElementById('connection-state').className = 'connected';
+                addCombatLog('Connected to dungeon server', 'system');
+                
+                // Calculate optimal font size for map display
+                calculateOptimalFontSize();
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                document.getElementById('connection-state').textContent = 'Error';
+                document.getElementById('connection-state').className = 'error';
+            };
+            
+            ws.onclose = () => {
+                console.log('Disconnected from server');
+                document.getElementById('connection-state').textContent = 'Disconnected';
+                document.getElementById('connection-state').className = 'error';
+                addCombatLog('Disconnected from server', 'system');
+                
+                setTimeout(connect, 2000);
+            };
+        }
+        
+        // Handle messages from server (similar to previous, but with camera updates)
+        function handleMessage(data) {
+            switch(data.type) {
+                case 'init':
+                    playerId = data.playerId;
+                    gameState.gamePhase = data.gamePhase;
+                    gameState.floor = data.floor;
+                    gameState.room = data.room;
+                    gameState.roomTemplate = data.template;
+                    gameState.skills = data.skills;
+                    gameState.turnOrder = data.turnOrder || [];
+                    gameState.currentTurn = data.currentTurn;
+                    
+                    document.getElementById('player-id').textContent = playerId;
+                    document.getElementById('current-floor').textContent = gameState.floor;
+                    document.getElementById('current-room').textContent = gameState.room;
+                    
+                    // Set up players and enemies
+                    gameState.players.clear();
+                    data.players.forEach(player => {
+                        gameState.players.set(player.id, player);
+                    });
+                    
+                    gameState.enemies.clear();
+                    data.enemies.forEach(enemy => {
+                        gameState.enemies.set(enemy.id, enemy);
+                    });
+                    
+                    playerData = gameState.players.get(playerId);
+                    console.log('Setting playerData:', playerData);
+                    console.log('playerId:', playerId);
+                    console.log('gameState.players:', gameState.players);
+                    
+                    // Load combat log
+                    if (data.combatLog) {
+                        data.combatLog.forEach(entry => {
+                            addCombatLog(entry.message, 'system');
+                        });
+                    }
+                    
+                    updateCamera();
+                    updateDisplay();
+                    updateSkillsPanel();
+                    updateTurnOrder();
+                    updateRoomStatus();
+                    break;
+                    
+                case 'playerJoined':
+                    gameState.players.set(data.player.id, data.player);
+                    updateDisplay();
+                    addCombatLog(`${data.player.id} joined`, 'system');
+                    break;
+                    
+                case 'playerMoved':
+                    if (gameState.players.has(data.playerId)) {
+                        gameState.players.get(data.playerId).x = data.x;
+                        gameState.players.get(data.playerId).y = data.y;
+                        
+                        // Update camera if it's our player
+                        if (data.playerId === playerId) {
+                            updateCamera();
+                        }
+                        updateDisplay();
+                    }
+                    break;
+                    
+                case 'roomChanged':
+                    gameState.floor = data.floor;
+                    gameState.room = data.room;
+                    gameState.roomTemplate = data.template;
+                    
+                    document.getElementById('current-floor').textContent = gameState.floor;
+                    document.getElementById('current-room').textContent = gameState.room;
+                    
+                    // Clear enemies from display
+                    gameState.enemies.clear();
+                    
+                    updateCamera();
+                    updateDisplay();
+                    updateRoomStatus();
+                    addCombatLog(`Entered ${data.roomId}`, 'system');
+                    
+                    if (gameState.floor > 1) {
+                        document.getElementById('current-floor').className = 'floor-deeper';
+                    }
+                    break;
+                    
+                case 'combatStarted':
+                    gameState.gamePhase = 'combat';
+                    gameState.turnOrder = data.turnOrder;
+                    gameState.currentTurn = data.currentTurn;
+                    updateDisplay();
+                    updateTurnOrder();
+                    updateRoomStatus();
+                    addCombatLog('=== COMBAT STARTED ===', 'system');
+                    
+                    // Show combat UI
+                    document.getElementById('turn-info').style.display = 'block';
+                    document.getElementById('turn-order').style.display = 'block';
+                    document.getElementById('skills-panel').style.display = 'block';
+                    document.getElementById('end-turn-btn').style.display = 'block';
+                    break;
+                    
+                case 'combatEnded':
+                    gameState.gamePhase = 'exploration';
+                    updateDisplay();
+                    updateRoomStatus();
+                    addCombatLog('=== COMBAT ENDED ===', 'system');
+                    
+                    // Hide combat UI
+                    document.getElementById('turn-info').style.display = 'none';
+                    document.getElementById('turn-order').style.display = 'none';
+                    document.getElementById('skills-panel').style.display = 'none';
+                    document.getElementById('end-turn-btn').style.display = 'none';
+                    break;
+                    
+                case 'roomCleared':
+                    addCombatLog('=== ROOM CLEARED! ===', 'room-clear');
+                    document.getElementById('next-room-btn').disabled = false;
+                    document.getElementById('next-room-btn').className = 'action-button progress';
+                    updateRoomStatus();
+                    break;
+                    
+                case 'turnStarted':
+                    gameState.currentTurn = data.currentTurn;
+                    gameState.turnOrder = data.turnOrder;
+                    
+                    if (gameState.currentTurn && gameState.currentTurn.id === playerId) {
+                        playerData.ap = playerData.maxAP;
+                    }
+                    
+                    updateDisplay();
+                    updateTurnOrder();
+                    updateSkillsPanel();
+                    clearTarget();
+                    break;
+                    
+                case 'skillUsed':
+                case 'combat':
+                    addCombatLog(data.message, data.damage ? 'damage' : 'heal');
+                    
+                    // Update health displays
+                    if (gameState.players.has(data.target)) {
+                        const target = gameState.players.get(data.target);
+                        if (data.damage) target.health -= data.damage;
+                        if (data.healing) target.health = Math.min(target.maxHealth, target.health + data.healing);
+                    } else if (gameState.enemies.has(data.target)) {
+                        const target = gameState.enemies.get(data.target);
+                        if (data.damage) target.health -= data.damage;
+                        if (data.healing) target.health = Math.min(target.maxHealth, target.health + data.healing);
+                    }
+                    
+                    if (data.attacker === playerId && playerData) {
+                        playerData.ap -= gameState.skills[data.skill]?.cost || 0;
+                    }
+                    
+                    updateDisplay();
+                    updateAPDisplay();
+                    break;
+                    
+                case 'playerKilled':
+                case 'enemyKilled':
+                    const targetId = data.playerId || data.enemyId;
+                    
+                    if (gameState.players.has(targetId)) {
+                        gameState.players.get(targetId).alive = false;
+                    } else if (gameState.enemies.has(targetId)) {
+                        gameState.enemies.get(targetId).alive = false;
+                    }
+                    
+                    if (data.killer === playerId && playerData) {
+                        playerData.kills++;
+                        document.getElementById('kills').textContent = playerData.kills;
+                    }
+                    
+                    addCombatLog(`${targetId} defeated!`, 'kill');
+                    updateDisplay();
+                    break;
+                    
+                case 'enemyMoved':
+                    if (gameState.enemies.has(data.enemyId)) {
+                        const enemy = gameState.enemies.get(data.enemyId);
+                        enemy.x = data.x;
+                        enemy.y = data.y;
+                        updateDisplay();
+                    }
+                    break;
+                    
+                case 'movementRange':
+                    // Handle movement range response
+                    movementRange = data.range;
+                    validMovementPositions = data.positions;
+                    
+                    // Highlight valid movement positions
+                    updateMovementHighlights();
+                    break;
+                    
+                default:
+                    console.log('Unhandled message:', data);
+            }
+        }
+        
+        // Update position display
+        function updatePositionDisplay() {
+            if (playerData) {
+                document.getElementById('player-pos').textContent = `${playerData.x},${playerData.y}`;
+            }
+        }
+        
+        // Handle map clicks for targeting (with camera offset)
+        function handleMapClick(viewX, viewY) {
+            if (!selectedSkill || gameState.currentTurn?.id !== playerId) return;
+            
+            // Convert viewport coordinates to world coordinates
+            const worldX = cameraX + viewX;
+            const worldY = cameraY + viewY;
+            
+            // Handle movement skills
+            if (selectedAbilityType === 'movement') {
+                // Check if this position is valid for movement
+                const validPosition = validMovementPositions.find(pos => pos.x === worldX && pos.y === worldY);
+                if (validPosition) {
+                    // Execute movement
+                    ws.send(JSON.stringify({
+                        type: 'useSkill',
+                        skillId: selectedSkill,
+                        targetX: worldX,
+                        targetY: worldY
+                    }));
+                    
+                    // Clear movement selection
+                    selectedSkill = null;
+                    selectedAbilityType = 'combat';
+                    validMovementPositions = [];
+                    targetsInRange = [];
+                    document.querySelectorAll('.ability-slot').forEach(s => s.classList.remove('selected'));
+                    updateDisplay();
+                }
+                return;
+            }
+            
+            // Handle combat skills - find entity at this position
+            let target = null;
+            
+            gameState.players.forEach((player, id) => {
+                if (player.alive && player.x === worldX && player.y === worldY) {
+                    target = {id, type: 'player', ...player};
+                }
+            });
+            
+            if (!target) {
+                gameState.enemies.forEach((enemy, id) => {
+                    if (enemy.alive && enemy.x === worldX && enemy.y === worldY) {
+                        target = {id, type: 'enemy', ...enemy};
+                    }
+                });
+            }
+            
+            if (target && targetsInRange.some(t => t.id === target.id)) {
+                selectedTarget = target;
+                updateTargetInfo();
+                updateDisplay();
+                
+                // Auto-execute skill
+                useSelectedSkill();
+            }
+        }
+        
+        // Update the large map display with camera system
+        function updateDisplay() {
+            if (!gameState.roomTemplate) return;
+            
+            const template = gameState.roomTemplate;
+            const mapContainer = document.getElementById('game-map');
+            mapContainer.innerHTML = '';
+            
+            // Create viewport (30x30 centered on player)
+            for (let viewY = 0; viewY < VIEWPORT_HEIGHT; viewY++) {
+                for (let viewX = 0; viewX < VIEWPORT_WIDTH; viewX++) {
+                    const worldX = cameraX + viewX;
+                    const worldY = cameraY + viewY;
+                    
+                    const cell = document.createElement('span');
+                    cell.className = 'map-cell';
+                    cell.onclick = () => handleMapClick(viewX, viewY);
+                    
+                    // Check if coordinates are within room bounds
+                    if (worldX >= 0 && worldX < template.width && worldY >= 0 && worldY < template.height) {
+                        // Check if it's a wall
+                        let isWall = template.walls.some(wall => wall[0] === worldX && wall[1] === worldY);
+                        
+                        if (isWall) {
+                            cell.textContent = '#';
+                            cell.classList.add('wall');
+                        } else {
+                            // Check for exits
+                            let isExit = template.exits && template.exits.some(exit => exit.x === worldX && exit.y === worldY);
+                            
+                            if (isExit) {
+                                cell.textContent = '>';
+                                cell.classList.add('exit');
+                            } else {
+                                cell.textContent = '.';
+                                cell.classList.add('floor');
+                            }
+                            
+                            // Place entities
+                            let entity = null;
+                            
+                            // Check for players
+                            gameState.players.forEach((player, id) => {
+                                if (player.alive && player.x === worldX && player.y === worldY) {
+                                    entity = { 
+                                        id, 
+                                        type: 'player', 
+                                        symbol: (id === playerId) ? '@' : id.slice(-1),
+                                        isCurrentPlayer: id === playerId
+                                    };
+                                }
+                            });
+                            
+                            // Check for enemies
+                            if (!entity) {
+                                gameState.enemies.forEach((enemy, id) => {
+                                    if (enemy.alive && enemy.x === worldX && enemy.y === worldY) {
+                                        entity = { id, type: 'enemy', symbol: enemy.symbol };
+                                    }
+                                });
+                            }
+                            
+                            if (entity) {
+                                cell.textContent = entity.symbol;
+                                if (entity.isCurrentPlayer) {
+                                    cell.classList.add('current-player');
+                                } else {
+                                    cell.classList.add(entity.type);
+                                }
+                            }
+                        }
+                    } else {
+                        // Outside room bounds - show void
+                        cell.textContent = ' ';
+                        cell.style.background = '#111';
+                    }
+                    
+                    // Highlight valid targets (convert world to viewport coordinates)
+                    const targetAtPosition = targetsInRange.find(t => t.x === worldX && t.y === worldY);
+                    if (targetAtPosition) {
+                        if (targetAtPosition.type === 'movement') {
+                            cell.classList.add('movement-selectable');
+                        } else {
+                            cell.classList.add('selectable');
+                        }
+                    }
+                    
+                    // Highlight selected target
+                    if (selectedTarget && selectedTarget.x === worldX && selectedTarget.y === worldY) {
+                        cell.classList.add('selected');
+                    }
+                    
+                    mapContainer.appendChild(cell);
+                }
+                mapContainer.appendChild(document.createElement('br'));
+            }
+            
+            updatePositionDisplay();
+            updateHealthDisplay();
+            updateAPDisplay();
+            updateGamePhase();
+            updateRoomStatus();
+            updateAbilitiesDisplay();
+            updateManaDisplay();
+            
+            // Recalculate font size to fill the available space
+            calculateOptimalFontSize();
+        }
+        
+        // Update mana display
+        function updateManaDisplay() {
+            if (!playerData) return;
+            
+            const manaText = document.getElementById('player-mana');
+            const manaFill = document.getElementById('mana-fill');
+            
+            // For now, using AP as mana (could be separate later)
+            const currentMana = playerData.ap || 0;
+            const maxMana = playerData.maxAP || 3;
+            
+            manaText.textContent = `${currentMana}/${maxMana}`;
+            
+            const manaPercent = (currentMana / maxMana) * 100;
+            manaFill.style.width = manaPercent + '%';
+        }
+        
+        // Update abilities display
+        function updateAbilitiesDisplay() {
+            console.log('updateAbilitiesDisplay called');
+            console.log('playerData:', playerData);
+            console.log('gameState.gamePhase:', gameState.gamePhase);
+            console.log('gameState.currentTurn:', gameState.currentTurn);
+            console.log('playerId:', playerId);
+            
+            const movementRange = (playerData && playerData.baseMovement) ? 
+                playerData.baseMovement + (playerData.movementModifier || 0) : 3;
+                
+            const abilities = [
+                { slot: 1, name: 'Move', ap: 0, available: true, type: 'movement', range: movementRange },
+                { slot: 2, name: 'Attack', ap: 0, available: true, type: 'combat' },
+                { slot: 3, name: 'Power Attack', ap: 1, available: playerData && playerData.ap >= 1, type: 'combat' },
+                { slot: 4, name: 'Heal', ap: 2, available: playerData && playerData.ap >= 2, type: 'combat' },
+                { slot: 5, name: 'Fireball', ap: 3, available: playerData && playerData.ap >= 3, type: 'combat' },
+                { slot: 6, name: '-Empty-', ap: '-', available: false },
+                { slot: 7, name: '-Empty-', ap: '-', available: false },
+                { slot: 8, name: '-Empty-', ap: '-', available: false },
+                { slot: 9, name: '-Empty-', ap: '-', available: false }
+            ];
+            
+            abilities.forEach(ability => {
+                const slot = document.querySelector(`[data-slot="${ability.slot}"]`);
+                if (slot) {
+                    const nameSpan = slot.querySelector('.ability-name');
+                    const apSpan = slot.querySelector('.ability-ap');
+                    
+                    nameSpan.textContent = ability.name;
+                    
+                    // Show AP cost or movement range
+                    if (ability.type === 'movement') {
+                        apSpan.textContent = `(${ability.range} tiles)`;
+                    } else {
+                        apSpan.textContent = `(${ability.ap})`;
+                    }
+                    
+                    // Update styling based on availability
+                    slot.className = 'ability-slot';
+                    const isMyTurn = gameState.gamePhase === 'combat' && 
+                                   gameState.currentTurn && gameState.currentTurn.id === playerId;
+                    const canUseAbility = ability.available && ability.name !== '-Empty-';
+                    
+                    console.log(`Slot ${ability.slot} (${ability.name}):`, {
+                        available: ability.available,
+                        canUseAbility: canUseAbility,
+                        isMyTurn: isMyTurn,
+                        gamePhase: gameState.gamePhase,
+                        isEmpty: ability.name === '-Empty-'
+                    });
+                    
+                    if (canUseAbility && isMyTurn) {
+                        slot.classList.add('available');
+                        console.log(`Slot ${ability.slot}: Added 'available' class (my turn)`);
+                    } else if (canUseAbility) {
+                        // Show as ready but not current turn  
+                        slot.classList.add('available');
+                        slot.style.opacity = '0.8';
+                        console.log(`Slot ${ability.slot}: Added 'available' class (not my turn)`);
+                    } else if (ability.name !== '-Empty-') {
+                        slot.classList.add('unavailable');
+                        console.log(`Slot ${ability.slot}: Added 'unavailable' class`);
+                    }
+                    
+                    // Handle click for abilities - allow clicking even if not your turn (for selection feedback)
+                    slot.onclick = () => {
+                        if (canUseAbility) {
+                            selectAbility(ability.slot, ability.name.toLowerCase().replace(' ', '_'), ability.type);
+                        }
+                    };
+                }
+            });
+        }
+        
+        // Select an ability from the abilities panel
+        function selectAbility(slot, skillId, abilityType = 'combat') {
+            // Clear previous selections
+            document.querySelectorAll('.ability-slot').forEach(s => s.classList.remove('selected'));
+            
+            // Select current ability
+            const abilitySlot = document.querySelector(`[data-slot="${slot}"]`);
+            if (abilitySlot) {
+                abilitySlot.classList.add('selected');
+            }
+            
+            // Use existing skill selection logic
+            selectedSkill = skillId;
+            selectedAbilityType = abilityType;
+            clearTarget();
+            
+            // Handle movement skills differently
+            if (abilityType === 'movement') {
+                // Request movement range from server
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'getMovementRange'
+                    }));
+                }
+            } else {
+                updateTargetHighlights();
+            }
+            
+            updateSkillsPanel();
+        }
+        
+        // [Keep all the other functions the same as before - updateSkillsPanel, selectSkill, etc.]
+        
+        // Update skills panel
+        function updateSkillsPanel() {
+            const skillsList = document.getElementById('skills-list');
+            skillsList.innerHTML = '';
+            
+            Object.entries(gameState.skills).forEach(([skillId, skill]) => {
+                const button = document.createElement('button');
+                button.className = 'skill-button';
+                button.onclick = () => selectSkill(skillId);
+                
+                const canUse = playerData && playerData.ap >= skill.cost && 
+                              gameState.currentTurn && gameState.currentTurn.id === playerId;
+                
+                button.disabled = !canUse;
+                if (selectedSkill === skillId) {
+                    button.classList.add('selected');
+                }
+                
+                button.innerHTML = `
+                    <div style="font-weight: bold;">${skill.name} (${skill.cost} AP)</div>
+                    <div style="font-size: 8px; opacity: 0.8;">${skill.description}</div>
+                `;
+                
+                skillsList.appendChild(button);
+            });
+        }
+        
+        // Select a skill
+        function selectSkill(skillId) {
+            selectedSkill = skillId;
+            clearTarget();
+            
+            updateTargetHighlights();
+            updateSkillsPanel();
+        }
+        
+        // Update target highlights
+        function updateTargetHighlights() {
+            if (!selectedSkill || !playerData) return;
+            
+            const skill = gameState.skills[selectedSkill];
+            targetsInRange = [];
+            
+            const checkTarget = (target, targetId) => {
+                if (!target.alive) return;
+                
+                const distance = Math.abs(target.x - playerData.x) + Math.abs(target.y - playerData.y);
+                if (distance <= skill.range) {
+                    targetsInRange.push({id: targetId, ...target});
+                }
+            };
+            
+            if (skill.range === 0) {
+                targetsInRange.push({id: playerId, ...playerData});
+            } else {
+                gameState.players.forEach(checkTarget);
+                gameState.enemies.forEach(checkTarget);
+            }
+            
+            updateDisplay();
+        }
+        
+        // Update movement highlights
+        function updateMovementHighlights() {
+            // Clear previous highlights
+            targetsInRange = [];
+            
+            // Set valid movement positions for highlighting
+            validMovementPositions.forEach(pos => {
+                targetsInRange.push({
+                    id: `move_${pos.x}_${pos.y}`,
+                    x: pos.x,
+                    y: pos.y,
+                    type: 'movement'
+                });
+            });
+            
+            updateDisplay();
+        }
+        
+        // Use the selected skill on selected target
+        function useSelectedSkill() {
+            if (!selectedSkill || !selectedTarget || !ws) return;
+            
+            ws.send(JSON.stringify({
+                type: 'useSkill',
+                skillId: selectedSkill,
+                targetId: selectedTarget.id
+            }));
+            
+            // Clear selections
+            selectedSkill = null;
+            clearTarget();
+            updateSkillsPanel();
+        }
+        
+        // Clear target selection
+        function clearTarget() {
+            selectedTarget = null;
+            targetsInRange = [];
+            document.getElementById('target-info').style.display = 'none';
+            updateDisplay();
+        }
+        
+        // Update target info display
+        function updateTargetInfo() {
+            const targetInfo = document.getElementById('target-info');
+            const targetDetails = document.getElementById('target-details');
+            
+            if (selectedTarget) {
+                targetInfo.style.display = 'block';
+                targetDetails.innerHTML = `
+                    <div>${selectedTarget.id} (${selectedTarget.type || 'enemy'})</div>
+                    <div>Health: ${selectedTarget.health}/${selectedTarget.maxHealth}</div>
+                    <div>Pos: ${selectedTarget.x},${selectedTarget.y}</div>
+                `;
+            } else {
+                targetInfo.style.display = 'none';
+            }
+        }
+        
+        // Update room status display
+        function updateRoomStatus() {
+            const statusEl = document.getElementById('room-status');
+            const nextRoomBtn = document.getElementById('next-room-btn');
+            
+            if (gameState.gamePhase === 'combat') {
+                statusEl.textContent = 'In Combat';
+                statusEl.style.color = '#ff0';
+                nextRoomBtn.disabled = true;
+                nextRoomBtn.className = 'action-button';
+            } else {
+                const aliveEnemies = Array.from(gameState.enemies.values()).filter(e => e.alive).length;
+                
+                if (aliveEnemies === 0) {
+                    statusEl.textContent = 'Room Cleared!';
+                    statusEl.style.color = '#0f0';
+                    nextRoomBtn.disabled = false;
+                    nextRoomBtn.className = 'action-button progress';
+                } else {
+                    statusEl.textContent = `${aliveEnemies} enemies present`;
+                    statusEl.style.color = '#f80';
+                    nextRoomBtn.disabled = true;
+                    nextRoomBtn.className = 'action-button';
+                }
+            }
+        }
+        
+        // Next room function
+        function nextRoom() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'nextRoom' }));
+            }
+        }
+        
+        // Update turn order display
+        function updateTurnOrder() {
+            const turnList = document.getElementById('turn-list');
+            const currentTurnSpan = document.getElementById('current-turn');
+            
+            turnList.innerHTML = '';
+            
+            if (gameState.currentTurn) {
+                currentTurnSpan.textContent = `${gameState.currentTurn.id}`;
+            }
+            
+            gameState.turnOrder.forEach((turn, index) => {
+                const div = document.createElement('div');
+                div.className = `turn-entry ${turn.type}`;
+                if (gameState.currentTurn && turn.id === gameState.currentTurn.id) {
+                    div.classList.add('current');
+                }
+                div.textContent = `${turn.id}`;
+                turnList.appendChild(div);
+            });
+            
+            // Update turn info panel
+            const turnInfo = document.getElementById('turn-info');
+            const endTurnBtn = document.getElementById('end-turn-btn');
+            
+            if (gameState.currentTurn && gameState.currentTurn.id === playerId) {
+                turnInfo.classList.add('my-turn');
+                endTurnBtn.disabled = false;
+            } else {
+                turnInfo.classList.remove('my-turn');
+                endTurnBtn.disabled = true;
+            }
+        }
+        
+        // End turn
+        function endTurn() {
+            if (ws && gameState.currentTurn?.id === playerId) {
+                ws.send(JSON.stringify({ type: 'endTurn' }));
+            }
+        }
+        
+        // Update AP display
+        function updateAPDisplay() {
+            const apDots = document.getElementById('ap-dots');
+            apDots.innerHTML = '';
+            
+            if (playerData) {
+                for (let i = 0; i < playerData.maxAP; i++) {
+                    const dot = document.createElement('span');
+                    dot.className = 'ap-dot';
+                    if (i >= playerData.ap) {
+                        dot.classList.add('empty');
+                    }
+                    apDots.appendChild(dot);
+                }
+            }
+        }
+        
+        // Update health display
+        function updateHealthDisplay() {
+            if (!playerData) return;
+            
+            document.getElementById('player-health').textContent = 
+                `${Math.max(0, playerData.health)}/${playerData.maxHealth}`;
+            
+            const healthPercent = Math.max(0, (playerData.health / playerData.maxHealth) * 100);
+            document.getElementById('health-fill').style.width = healthPercent + '%';
+            
+            const fill = document.getElementById('health-fill');
+            if (healthPercent > 60) {
+                fill.style.background = '#0f0';
+            } else if (healthPercent > 30) {
+                fill.style.background = '#ff0';
+            } else {
+                fill.style.background = '#f00';
+            }
+        }
+        
+        // Update game phase display
+        function updateGamePhase() {
+            const phaseSpan = document.getElementById('game-phase');
+            phaseSpan.textContent = gameState.gamePhase;
+            phaseSpan.className = `phase-${gameState.gamePhase}`;
+            
+            // Show/hide combat turn info
+            const combatTurnInfo = document.getElementById('combat-turn-info');
+            const turnSpan = document.getElementById('current-turn');
+            
+            if (gameState.gamePhase === 'combat' && gameState.currentTurn) {
+                combatTurnInfo.style.display = 'block';
+                turnSpan.textContent = gameState.currentTurn.id;
+            } else {
+                combatTurnInfo.style.display = 'none';
+            }
+        }
+        
+        // Handle keyboard input
+        document.addEventListener('keydown', (e) => {
+            if (!ws || ws.readyState !== WebSocket.OPEN || !playerId) return;
+            
+            // Handle ability keys 1-9 during combat or exploration
+            if (gameState.gamePhase === 'combat' || gameState.gamePhase === 'exploration') {
+                const keyNum = parseInt(e.key);
+                if (keyNum >= 1 && keyNum <= 9) {
+                    const abilityMap = {
+                        1: 'move',
+                        2: 'attack', 
+                        3: 'power_attack',
+                        4: 'heal',
+                        5: 'fireball'
+                    };
+                    
+                    if (abilityMap[keyNum]) {
+                        const abilityType = keyNum === 1 ? 'movement' : 'combat';
+                        selectAbility(keyNum, abilityMap[keyNum], abilityType);
+                        e.preventDefault();
+                    }
+                    return;
+                }
+                
+                if (e.key === ' ') {
+                    endTurn();
+                    e.preventDefault();
+                }
+                return;
+            }
+            
+            // Allow movement during exploration (for now, allow in combat too for testing)
+            // if (gameState.gamePhase !== 'exploration') {
+            //     return;
+            // }
+            
+            const player = gameState.players.get(playerId);
+            console.log('Movement key pressed, player:', player, 'playerId:', playerId);
+            if (!player || !player.alive) {
+                console.log('Movement blocked: player not found or dead');
+                return;
+            }
+            
+            let dx = 0, dy = 0;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    dy = -1;
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    dy = 1;
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    dx = -1;
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    dx = 1;
+                    e.preventDefault();
+                    break;
+                case 'Enter':
+                    // Quick next room
+                    if (document.getElementById('next-room-btn').disabled === false) {
+                        nextRoom();
+                    }
+                    e.preventDefault();
+                    break;
+                default:
+                    return;
+            }
+            
+            if (dx !== 0 || dy !== 0) {
+                ws.send(JSON.stringify({
+                    type: 'move',
+                    dx: dx,
+                    dy: dy
+                }));
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            calculateOptimalFontSize();
+        });
+        
+        // Connect on load
+        connect();
+    </script>
+</body>
+</html>

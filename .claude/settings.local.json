@@ -64,7 +64,16 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:github.com)",
       "Bash(timeout 30s npx playwright test tests/login-screen-alignment.spec.ts --project=chromium -q)",
-      "Bash(timeout 30s npx playwright test tests/login-screen-alignment.spec.ts --project=chromium)"
+      "Bash(timeout 30s npx playwright test tests/login-screen-alignment.spec.ts --project=chromium)",
+      "Bash(timeout 30s npx playwright test tests/dungeon-functionality.spec.ts --project=chromium)",
+      "Bash(timeout 15s npx playwright test tests/dungeon-functionality.spec.ts --project=chromium --grep=\"game loads with proper dungeon layout\" -q)",
+      "Bash(timeout 15s npx playwright test tests/dungeon-functionality.spec.ts --project=chromium --grep=\"game loads with proper dungeon layout\")",
+      "Bash(timeout 30s npx playwright test:*)",
+      "Bash(start http://localhost:3003)",
+      "Bash(timeout 5s npm run test:functionality)",
+      "Bash(timeout 10s npm run test:functionality)",
+      "Bash(start test-new-systems.html)",
+      "Bash(start single-player-ascii-game.html)"
     ],
     "deny": [],
     "ask": []

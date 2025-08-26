@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Single-Player Party-Based ASCII Roguelike</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #game-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: 100vh;
+            height: 100vh;
+            gap: 0;
+        }
+        
+        #left-panel, #right-panel {
+            background: #000;
+            border: 1px solid #0f0;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+        
+        #left-panel {
+            border-right: 2px solid #0f0;
+        }
+        
+        #right-panel {
+            border-left: 2px solid #0f0;
+        }
+        
+        #map-container {
+            background: #000;
+            border-top: 1px solid #0f0;
+            border-bottom: 1px solid #0f0;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Status displays */
+        .status-section {
+            border: 1px solid #333;
+            margin: 5px 0;
+            padding: 5px;
+        }
+
+        .status-title {
+            color: #0f0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .status-bar {
+            width: 100%;
+            height: 12px;
+            border: 1px solid #333;
+            background: #111;
+            margin: 2px 0;
+        }
+
+        .status-fill {
+            height: 100%;
+            background: #0f0;
+            transition: width 0.3s;
+        }
+
+        /* Party member displays */
+        .party-section {
+            border: 1px solid #333;
+            margin: 5px 0;
+            padding: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .party-member {
+            border: 1px solid #222;
+            margin: 2px 0;
+            padding: 3px;
+            background: #001100;
+        }
+
+        .party-member.active {
+            border-color: #0f0;
+            background: #002200;
+        }
+
+        .party-member.dead {
+            color: #666;
+            background: #110000;
+        }
+
+        /* Abilities Grid */
+        .abilities-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            margin: 5px 0;
+        }
+
+        .ability-slot {
+            padding: 3px 5px;
+            border: 1px solid #333;
+            background: #001100;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 10px;
+            text-align: center;
+        }
+        
+        .ability-slot:hover {
+            border-color: #0f0;
+            background: #002200;
+        }
+        
+        .ability-slot.available {
+            border-color: #0f0;
+            background: #001100;
+        }
+        
+        .ability-slot.unavailable {
+            border-color: #555;
+            background: #000;
+            color: #555;
+            cursor: not-allowed;
+        }
+        
+        .ability-slot.selected {
+            border-color: #ff0;
+            background: #220;
+            color: #ff0;
+        }
+        
+        .ability-name {
+            font-weight: bold;
+        }
+        
+        .ability-ap {
+            font-size: 9px;
+            color: #aaa;
+        }
+
+        /* Map display */
+        #map-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1;
+            white-space: pre;
+            color: #0f0;
+            padding: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Adventure log */
+        #adventure-log {
+            height: 300px;
+            overflow-y: auto;
+            background: #000;
+            border: 1px solid #333;
+            padding: 5px;
+            font-size: 10px;
+        }
+
+        .log-entry {
+            margin: 1px 0;
+            padding: 1px;
+        }
+
+        .log-entry.system {
+            color: #888;
+        }
+
+        .log-entry.combat {
+            color: #f80;
+        }
+
+        .log-entry.skill {
+            color: #08f;
+        }
+
+        /* Controls */
+        .controls {
+            border: 1px solid #333;
+            padding: 5px;
+            margin: 5px 0;
+        }
+
+        .control-button {
+            background: #002200;
+            border: 1px solid #0f0;
+            color: #0f0;
+            padding: 2px 6px;
+            margin: 1px;
+            cursor: pointer;
+            font-size: 10px;
+            font-family: inherit;
+        }
+
+        .control-button:hover {
+            background: #003300;
+        }
+
+        .control-button:disabled {
+            background: #111;
+            color: #555;
+            border-color: #333;
+            cursor: not-allowed;
+        }
+
+        /* Guild interface */
+        .guild-interface {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 400px;
+            background: #000;
+            border: 2px solid #0f0;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .guild-interface.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Left Panel: Party Status & Abilities -->
+        <div id="left-panel">
+            <!-- Game Status -->
+            <div class="status-section">
+                <div class="status-title">Game Status</div>
+                <div>Location: <span id="location-display">Guild Base</span></div>
+                <div>Floor: <span id="current-floor">-</span> Room: <span id="current-room">-</span></div>
+                <div>Gold: <span id="party-gold">0</span></div>
+            </div>
+
+            <!-- Active Party Member -->
+            <div class="status-section">
+                <div class="status-title">Active Character</div>
+                <div id="active-character-name">None Selected</div>
+                <div>Health: <span id="active-health">0/0</span></div>
+                <div class="status-bar">
+                    <div class="status-fill" id="health-fill" style="width: 100%;"></div>
+                </div>
+                <div>Level: <span id="active-level">0</span></div>
+                <div>Mastery: <span id="active-mastery">Novice</span></div>
+            </div>
+
+            <!-- Party Members -->
+            <div class="party-section">
+                <div class="status-title">Party (0/6)</div>
+                <div id="party-members"></div>
+            </div>
+
+            <!-- Abilities -->
+            <div class="status-section">
+                <div class="status-title">Abilities</div>
+                <div class="abilities-grid" id="abilities-grid">
+                    <!-- Will be populated with ability slots 1-9 -->
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="control-button" onclick="toggleGuildInterface()">Guild Base</button>
+                <button class="control-button" onclick="startNewRun()" id="start-run-btn">Start Run</button>
+                <button class="control-button" onclick="endCurrentRun()" id="end-run-btn" disabled>End Run</button>
+            </div>
+        </div>
+
+        <!-- Center Panel: Game Map -->
+        <div id="map-container">
+            <div id="map-display">
+                Welcome to the Single-Player Party-Based ASCII Roguelike!
+                
+                Use the Guild Base to create and manage your party.
+                Start a run when you have party members.
+                
+                Controls:
+                - WASD / Arrow Keys: Move
+                - 1-9: Use Abilities
+                - Space: Wait/Pass Turn
+                - Enter: Interact/Confirm
+            </div>
+        </div>
+
+        <!-- Right Panel: Adventure Log & Info -->
+        <div id="right-panel">
+            <!-- Adventure Log -->
+            <div class="status-section">
+                <div class="status-title">Adventure Log</div>
+                <div id="adventure-log">
+                    <div class="log-entry system">Game initialized. Welcome to your adventure!</div>
+                    <div class="log-entry system">Visit the Guild Base to create party members.</div>
+                </div>
+            </div>
+
+            <!-- Current Action -->
+            <div class="status-section">
+                <div class="status-title">Current Action</div>
+                <div id="current-action">Idle</div>
+                <div id="action-description">Select an action to see details.</div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="status-section">
+                <div class="status-title">Quick Stats</div>
+                <div>Runs Completed: <span id="runs-completed">0</span></div>
+                <div>Deepest Floor: <span id="deepest-floor">0</span></div>
+                <div>Characters Lost: <span id="characters-lost">0</span></div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <div style="font-size: 9px;">
+                    <strong>Keyboard Controls:</strong><br>
+                    WASD/Arrows: Move<br>
+                    1-9: Use Abilities<br>
+                    Space: Wait Turn<br>
+                    Enter: Interact<br>
+                    G: Guild Base<br>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guild Interface Modal -->
+    <div id="guild-interface" class="guild-interface">
+        <h2>Guild Base</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 300px;">
+            <div>
+                <h3>Create New Character</h3>
+                <input type="text" id="new-character-name" placeholder="Character Name" style="width: 100%; margin: 5px 0;">
+                <button class="control-button" onclick="createNewCharacter()">Create Character</button>
+                
+                <h3>Available Characters</h3>
+                <div id="available-characters" style="height: 150px; overflow-y: auto; border: 1px solid #333; padding: 5px;">
+                    <!-- Will show stored characters -->
+                </div>
+            </div>
+            <div>
+                <h3>Current Party</h3>
+                <div id="guild-party-display" style="height: 200px; overflow-y: auto; border: 1px solid #333; padding: 5px;">
+                    <!-- Will show current party -->
+                </div>
+                <button class="control-button" onclick="closeGuildInterface()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load our new systems -->
+    <script src="src/skills/SkillCategories.js"></script>
+    <script src="src/core/EventSystem.js"></script>
+    <script src="src/core/GameState.js"></script>
+    <script src="src/skills/SkillSystem.js"></script>
+
+    <script>
+        // Initialize game systems
+        const eventSystem = new EventSystem();
+        const gameState = new GameState();
+        const skillSystem = new SkillSystem(eventSystem);
+        
+        let activeCharacterIndex = 0;
+        let selectedAbility = null;
+
+        // Initialize game
+        function initializeGame() {
+            setupEventListeners();
+            setupKeyboardControls();
+            updateAllDisplays();
+            addLog('Single-player party-based roguelike initialized!', 'system');
+            addLog('Press G or click Guild Base to create your party.', 'system');
+        }
+
+        // Event listeners for game systems
+        function setupEventListeners() {
+            eventSystem.on('CHARACTER_SKILL_GAINED', (data) => {
+                addLog(`${data.characterId} improved in a skill! Level ${data.oldLevel} → ${data.newLevel}`, 'skill');
+                updateAllDisplays();
+            });
+
+            eventSystem.on('PARTY_MEMBER_ADDED', (data) => {
+                addLog(`${data.characterId} joined the party!`, 'system');
+                updateAllDisplays();
+            });
+
+            eventSystem.on('COMBAT_STARTED', (data) => {
+                addLog('Combat begins!', 'combat');
+                updateAllDisplays();
+            });
+        }
+
+        // Keyboard controls
+        function setupKeyboardControls() {
+            document.addEventListener('keydown', (e) => {
+                if (document.getElementById('guild-interface').classList.contains('active')) {
+                    return; // Don't handle game keys when guild interface is open
+                }
+
+                switch(e.key.toLowerCase()) {
+                    case 'w':
+                    case 'arrowup':
+                        handleMovement(0, -1);
+                        e.preventDefault();
+                        break;
+                    case 's':
+                    case 'arrowdown':
+                        handleMovement(0, 1);
+                        e.preventDefault();
+                        break;
+                    case 'a':
+                    case 'arrowleft':
+                        handleMovement(-1, 0);
+                        e.preventDefault();
+                        break;
+                    case 'd':
+                    case 'arrowright':
+                        handleMovement(1, 0);
+                        e.preventDefault();
+                        break;
+                    case 'g':
+                        toggleGuildInterface();
+                        e.preventDefault();
+                        break;
+                    case ' ':
+                        handleWait();
+                        e.preventDefault();
+                        break;
+                    case '1': case '2': case '3': case '4': case '5':
+                    case '6': case '7': case '8': case '9':
+                        handleAbilityKey(parseInt(e.key));
+                        e.preventDefault();
+                        break;
+                }
+            });
+        }
+
+        // Game actions
+        function handleMovement(dx, dy) {
+            if (gameState.party.members.size === 0) {
+                addLog('No party members! Visit Guild Base to create characters.', 'system');
+                return;
+            }
+
+            // For now, just update position and use a movement skill
+            gameState.location.playerX += dx;
+            gameState.location.playerY += dy;
+            
+            // Award movement skill XP to active character
+            const activeCharacter = getActiveCharacter();
+            if (activeCharacter) {
+                skillSystem.awardSkillUse(activeCharacter, 'running', 'trivial', 2);
+            }
+            
+            updateMapDisplay();
+            addLog(`Moved to (${gameState.location.playerX}, ${gameState.location.playerY})`, 'system');
+        }
+
+        function handleAbilityKey(abilityNum) {
+            const activeCharacter = getActiveCharacter();
+            if (!activeCharacter) {
+                addLog('No active character!', 'system');
+                return;
+            }
+
+            // For now, just use a random skill based on ability number
+            const skillKeys = Object.keys(activeCharacter.skills);
+            const skillKey = skillKeys[abilityNum - 1] || 'one_handed';
+            
+            const difficulties = ['easy', 'normal', 'hard'];
+            const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+            
+            skillSystem.awardSkillUse(activeCharacter, skillKey, difficulty, 10);
+            
+            const skillInfo = skillSystem.getSkillInfo(skillKey);
+            addLog(`${activeCharacter.name} uses ${skillInfo ? skillInfo.name : skillKey}!`, 'combat');
+        }
+
+        function handleWait() {
+            addLog('Waiting...', 'system');
+        }
+
+        // Guild interface
+        function toggleGuildInterface() {
+            const guildInterface = document.getElementById('guild-interface');
+            guildInterface.classList.toggle('active');
+            
+            if (guildInterface.classList.contains('active')) {
+                updateGuildInterface();
+            }
+        }
+
+        function closeGuildInterface() {
+            document.getElementById('guild-interface').classList.remove('active');
+        }
+
+        function createNewCharacter() {
+            const nameInput = document.getElementById('new-character-name');
+            const characterName = nameInput.value.trim();
+            
+            if (!characterName) {
+                alert('Please enter a character name');
+                return;
+            }
+
+            // Create new character
+            const character = {
+                id: `char_${Date.now()}`,
+                name: characterName,
+                health: 100,
+                maxHealth: 100,
+                level: 1,
+                skills: skillSystem.initializeCharacterSkills()
+            };
+
+            // Give some random starting skills
+            const startingSkills = ['one_handed', 'archery', 'sneaking', 'climbing', 'alertness'];
+            startingSkills.forEach(skillKey => {
+                skillSystem.advanceSkill(character, skillKey, Math.floor(Math.random() * 5) + 1);
+            });
+
+            // Add to guild storage
+            gameState.guild.storedCharacters.set(character.id, character);
+            
+            // Add to party if there's room
+            if (gameState.party.members.size < 6) {
+                const result = gameState.addPartyMember(character);
+                if (result.success) {
+                    eventSystem.emit('PARTY_MEMBER_ADDED', { characterId: character.id });
+                }
+            }
+
+            nameInput.value = '';
+            updateGuildInterface();
+            addLog(`Created character: ${characterName}`, 'system');
+        }
+
+        // Utility functions
+        function getActiveCharacter() {
+            const partyMembers = Array.from(gameState.party.members.values());
+            return partyMembers[activeCharacterIndex] || null;
+        }
+
+        function startNewRun() {
+            const result = gameState.startNewRun();
+            if (result.success) {
+                addLog(`Started dungeon run - Floor ${result.floor}!`, 'system');
+                document.getElementById('start-run-btn').disabled = true;
+                document.getElementById('end-run-btn').disabled = false;
+                updateAllDisplays();
+                updateMapDisplay();
+            } else {
+                addLog(result.reason, 'system');
+            }
+        }
+
+        function endCurrentRun() {
+            if (gameState.currentRun.active) {
+                gameState.returnToGuild();
+                addLog('Returned to Guild Base', 'system');
+                document.getElementById('start-run-btn').disabled = false;
+                document.getElementById('end-run-btn').disabled = true;
+                updateAllDisplays();
+            }
+        }
+
+        // Display updates
+        function updateAllDisplays() {
+            updateGameStatus();
+            updatePartyDisplay();
+            updateActiveCharacterDisplay();
+            updateAbilitiesDisplay();
+            updateQuickStats();
+        }
+
+        function updateGameStatus() {
+            document.getElementById('location-display').textContent = gameState.location.type;
+            document.getElementById('current-floor').textContent = gameState.currentRun.active ? gameState.currentRun.floor : '-';
+            document.getElementById('current-room').textContent = gameState.currentRun.active ? '1' : '-';
+            document.getElementById('party-gold').textContent = gameState.party.gold;
+        }
+
+        function updatePartyDisplay() {
+            const partyContainer = document.getElementById('party-members');
+            const partyMembers = Array.from(gameState.party.members.values());
+            
+            partyContainer.innerHTML = '';
+            partyMembers.forEach((character, index) => {
+                const memberDiv = document.createElement('div');
+                memberDiv.className = `party-member ${index === activeCharacterIndex ? 'active' : ''}`;
+                memberDiv.onclick = () => {
+                    activeCharacterIndex = index;
+                    updateAllDisplays();
+                };
+                
+                const mastery = skillSystem.getMasteryLevel(character);
+                memberDiv.innerHTML = `
+                    <div>${character.name} (${mastery})</div>
+                    <div>HP: ${character.health}/${character.maxHealth}</div>
+                    <div>Level: ${character.level}</div>
+                `;
+                partyContainer.appendChild(memberDiv);
+            });
+
+            // Update party title
+            document.querySelector('.party-section .status-title').textContent = `Party (${partyMembers.length}/6)`;
+        }
+
+        function updateActiveCharacterDisplay() {
+            const activeCharacter = getActiveCharacter();
+            if (!activeCharacter) {
+                document.getElementById('active-character-name').textContent = 'None Selected';
+                document.getElementById('active-health').textContent = '0/0';
+                document.getElementById('active-level').textContent = '0';
+                document.getElementById('active-mastery').textContent = 'Novice';
+                document.getElementById('health-fill').style.width = '0%';
+                return;
+            }
+
+            document.getElementById('active-character-name').textContent = activeCharacter.name;
+            document.getElementById('active-health').textContent = `${activeCharacter.health}/${activeCharacter.maxHealth}`;
+            document.getElementById('active-level').textContent = activeCharacter.level;
+            document.getElementById('active-mastery').textContent = skillSystem.getMasteryLevel(activeCharacter);
+            
+            const healthPercent = (activeCharacter.health / activeCharacter.maxHealth) * 100;
+            document.getElementById('health-fill').style.width = `${healthPercent}%`;
+        }
+
+        function updateAbilitiesDisplay() {
+            const abilitiesGrid = document.getElementById('abilities-grid');
+            abilitiesGrid.innerHTML = '';
+
+            for (let i = 1; i <= 9; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'ability-slot available';
+                slot.innerHTML = `
+                    <div class="ability-name">[${i}] Skill</div>
+                    <div class="ability-ap">Use Skill</div>
+                `;
+                slot.onclick = () => handleAbilityKey(i);
+                abilitiesGrid.appendChild(slot);
+            }
+        }
+
+        function updateMapDisplay() {
+            const mapDisplay = document.getElementById('map-display');
+            const x = gameState.location.playerX;
+            const y = gameState.location.playerY;
+            
+            let mapContent = `Position: (${x}, ${y})\n\n`;
+            
+            // Simple ASCII map representation
+            for (let row = y - 10; row <= y + 10; row++) {
+                let line = '';
+                for (let col = x - 20; col <= x + 20; col++) {
+                    if (col === x && row === y) {
+                        line += '@';  // Player
+                    } else if (Math.abs(col - x) + Math.abs(row - y) < 5) {
+                        line += '.';  // Floor
+                    } else {
+                        line += '#';  // Wall
+                    }
+                }
+                mapContent += line + '\n';
+            }
+            
+            mapDisplay.textContent = mapContent;
+        }
+
+        function updateGuildInterface() {
+            updateAvailableCharacters();
+            updateGuildPartyDisplay();
+        }
+
+        function updateAvailableCharacters() {
+            const container = document.getElementById('available-characters');
+            container.innerHTML = '';
+            
+            gameState.guild.storedCharacters.forEach((character, id) => {
+                const characterDiv = document.createElement('div');
+                characterDiv.style.cssText = 'border: 1px solid #333; padding: 3px; margin: 2px; cursor: pointer;';
+                characterDiv.innerHTML = `
+                    <div>${character.name} (Level ${character.level})</div>
+                    <div style="font-size: 9px;">${skillSystem.getMasteryLevel(character)}</div>
+                `;
+                characterDiv.onclick = () => addToParty(id);
+                container.appendChild(characterDiv);
+            });
+        }
+
+        function updateGuildPartyDisplay() {
+            const container = document.getElementById('guild-party-display');
+            const partyMembers = Array.from(gameState.party.members.values());
+            
+            container.innerHTML = '';
+            partyMembers.forEach((character) => {
+                const characterDiv = document.createElement('div');
+                characterDiv.style.cssText = 'border: 1px solid #0f0; padding: 3px; margin: 2px; background: #001100;';
+                characterDiv.innerHTML = `
+                    <div>${character.name}</div>
+                    <div style="font-size: 9px;">HP: ${character.health}/${character.maxHealth}</div>
+                `;
+                container.appendChild(characterDiv);
+            });
+        }
+
+        function addToParty(characterId) {
+            const character = gameState.guild.storedCharacters.get(characterId);
+            if (!character) return;
+            
+            const result = gameState.addPartyMember(character);
+            if (result.success) {
+                eventSystem.emit('PARTY_MEMBER_ADDED', { characterId: character.id });
+                updateGuildInterface();
+            } else {
+                alert(result.reason);
+            }
+        }
+
+        function updateQuickStats() {
+            document.getElementById('runs-completed').textContent = gameState.playerProgress.runsCompleted;
+            document.getElementById('deepest-floor').textContent = gameState.playerProgress.deepestFloor;
+            document.getElementById('characters-lost').textContent = gameState.playerProgress.totalCharactersLost;
+        }
+
+        function addLog(message, type = 'system') {
+            const log = document.getElementById('adventure-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Initialize game when page loads
+        document.addEventListener('DOMContentLoaded', initializeGame);
+    </script>
+</body>
+</html>

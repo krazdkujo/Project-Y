@@ -47,6 +47,27 @@
             height: 100vh;
             padding: 0;
             margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #center-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .ui-state {
+            display: none;
+            flex: 1;
+            padding: 10px;
+            overflow: auto;
+        }
+        
+        .ui-state.active {
+            display: flex;
+            flex-direction: column;
         }
 
         /* Status displays */
@@ -166,6 +187,50 @@
             left: 0;
         }
 
+        /* Map Legend */
+        .legend-section {
+            border: 1px solid #333;
+            margin: 5px 0;
+            padding: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .legend-category {
+            margin-bottom: 8px;
+        }
+
+        .legend-category-title {
+            color: #0f0;
+            font-weight: bold;
+            font-size: 10px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 3px;
+            padding-bottom: 1px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 1px 0;
+            font-size: 10px;
+            line-height: 1.2;
+        }
+
+        .legend-symbol {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            width: 15px;
+            text-align: center;
+            margin-right: 8px;
+            color: #0f0;
+        }
+
+        .legend-description {
+            flex: 1;
+            color: #ccc;
+        }
+
         /* Adventure log */
         #adventure-log {
             height: 300px;
@@ -223,22 +288,164 @@
         }
 
         /* Guild interface */
-        .guild-interface {
+
+        /* Character Creation Interface */
+        .character-creation {
             display: none;
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 400px;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
             background: #000;
             border: 2px solid #0f0;
             padding: 20px;
-            z-index: 1000;
+            z-index: 1001;
+            overflow-y: auto;
         }
 
-        .guild-interface.active {
+        .character-creation.active {
             display: block;
+        }
+
+        .world-location {
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .world-location:hover {
+            background: rgba(0, 255, 0, 0.2);
+        }
+
+        .world-location.selected {
+            background: rgba(0, 255, 0, 0.3);
+        }
+        
+        .world-map-display {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            height: 100%;
+        }
+        
+        .world-map-grid {
+            border: 1px solid #00ff00;
+            background: #000;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-y: auto;
+            line-height: 1.2;
+        }
+
+        .creation-section {
+            border: 1px solid #333;
+            margin: 10px 0;
+            padding: 10px;
+        }
+
+        .creation-title {
+            color: #0f0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .skill-allocation {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .skill-category {
+            border: 1px solid #222;
+            padding: 8px;
+            background: #001100;
+        }
+
+        .skill-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 3px 0;
+            font-size: 11px;
+        }
+
+        .skill-points {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .point-button {
+            background: #002200;
+            border: 1px solid #0f0;
+            color: #0f0;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .point-button:hover {
+            background: #003300;
+        }
+
+        .point-button:disabled {
+            background: #111;
+            color: #555;
+            border-color: #333;
+            cursor: not-allowed;
+        }
+
+        .weapon-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .weapon-option {
+            border: 1px solid #333;
+            padding: 10px;
+            background: #001100;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .weapon-option:hover {
+            background: #002200;
+            border-color: #0f0;
+        }
+
+        .weapon-option.selected {
+            background: #003300;
+            border-color: #0f0;
+            border-width: 2px;
+        }
+
+        .weapon-name {
+            color: #0f0;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .weapon-stats {
+            font-size: 10px;
+            color: #888;
+        }
+
+        .creation-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .stat-display {
+            font-size: 11px;
         }
     </style>
 </head>
@@ -280,27 +487,155 @@
                 </div>
             </div>
 
+            <!-- Map Legend -->
+            <div class="legend-section">
+                <div class="status-title">Map Legend</div>
+                <div id="map-legend">
+                    <!-- Will be populated dynamically based on visible symbols -->
+                </div>
+            </div>
+
             <!-- Controls -->
             <div class="controls">
                 <button class="control-button" onclick="toggleGuildInterface()">Guild Base</button>
                 <button class="control-button" onclick="startNewRun()" id="start-run-btn">Start Run</button>
                 <button class="control-button" onclick="endCurrentRun()" id="end-run-btn" disabled>End Run</button>
+                <button class="control-button" onclick="testCombat()" id="test-combat-btn">Test Combat</button>
             </div>
         </div>
 
         <!-- Center Panel: Game Map -->
         <div id="map-container">
-            <div id="map-display">
-                Welcome to the Single-Player Party-Based ASCII Roguelike!
+            <div id="center-content">
+                <!-- Dungeon/Map View -->
+                <div id="dungeon-state" class="ui-state">
+                    <div id="map-display">
+                        Welcome to the Single-Player Party-Based ASCII Roguelike!
+                        
+                        Use the Guild Base to create and manage your party.
+                        Start a run when you have party members.
+                        
+                        Controls:
+                        - WASD / Arrow Keys: Move
+                        - 1-9: Use Abilities
+                        - Space: Wait/Pass Turn
+                        - G: Guild Base, M: World Map
+                    </div>
+                </div>
                 
-                Use the Guild Base to create and manage your party.
-                Start a run when you have party members.
+                <!-- World Map View -->
+                <div id="world-map-state" class="ui-state">
+                    <h2>World Map - Explore Dungeons</h2>
+                    <div class="world-map-display">
+                        <div>
+                            <h3>Available Locations</h3>
+                            <div id="world-map-grid" class="world-map-grid">
+                                <!-- ASCII world map will be rendered here -->
+                            </div>
+                        </div>
+                        <div>
+                            <h3>Location Info</h3>
+                            <div id="location-info" style="height: 200px; border: 1px solid #333; padding: 10px; overflow-y: auto;">
+                                <div class="info-text">Select a location to view details...</div>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <button class="control-button" onclick="enterSelectedDungeon()">Enter Dungeon</button>
+                                <button class="control-button" onclick="switchToGuildState()">Return to Guild</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
-                Controls:
-                - WASD / Arrow Keys: Move
-                - 1-9: Use Abilities
-                - Space: Wait/Pass Turn
-                - Enter: Interact/Confirm
+                <!-- Guild View -->
+                <div id="guild-state" class="ui-state active">
+                    <h2>Guild Base</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100% - 60px);">
+                        <div>
+                            <h3>Create New Character</h3>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="control-button" onclick="createRandomCharacter()">Quick Random</button>
+                                <button class="control-button" onclick="createNewCharacter()">Custom Creation</button>
+                            </div>
+                            <p style="font-size: 10px; color: #888; margin-top: 5px;">Quick Random creates a character instantly. Custom Creation opens the full character builder.</p>
+                            
+                            <h3>Available Characters</h3>
+                            <div id="available-characters" style="height: 150px; overflow-y: auto; border: 1px solid #333; padding: 5px;">
+                                <!-- Will show stored characters -->
+                            </div>
+                        </div>
+                        <div>
+                            <h3>Current Party</h3>
+                            <div id="guild-party-display" style="height: 200px; overflow-y: auto; border: 1px solid #333; padding: 5px;">
+                                <!-- Will show current party -->
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button class="control-button" onclick="switchToWorldMapState()">Explore World</button>
+                                <button class="control-button" onclick="switchToDungeonState()">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Character Creation View -->
+                <div id="character-creation-state" class="ui-state">
+                    <div class="creation-title">Character Creation</div>
+                    
+                    <!-- Basic Info -->
+                    <div class="creation-section">
+                        <div class="creation-title">Basic Information</div>
+                        <div style="margin-bottom: 10px;">
+                            <label for="character-name-input">Character Name:</label><br>
+                            <input type="text" id="character-name-input" style="background: #111; color: #0f0; border: 1px solid #333; padding: 5px; width: 300px;" placeholder="Enter character name">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <button class="control-button" onclick="generateRandomCharacterData()" style="margin-right: 10px;">Generate Random</button>
+                            <span style="font-size: 10px; color: #888;">Click to auto-fill with random skills and weapon</span>
+                        </div>
+                    </div>
+
+                    <!-- Skill Point Allocation -->
+                    <div class="creation-section">
+                        <div class="creation-title">Skill Allocation (Points Available: <span id="available-skill-points">25</span>)</div>
+                        <div class="skill-allocation" id="skill-allocation-grid">
+                            <!-- Will be populated with skill categories -->
+                        </div>
+                    </div>
+
+                    <!-- Starting Weapon Selection -->
+                    <div class="creation-section">
+                        <div class="creation-title">Choose Starting Weapon</div>
+                        <div class="weapon-selection" id="weapon-selection-grid">
+                            <!-- Will be populated with weapon options -->
+                        </div>
+                    </div>
+
+                    <!-- Character Preview -->
+                    <div class="creation-section">
+                        <div class="creation-title">Character Preview</div>
+                        <div class="creation-stats">
+                            <div>
+                                <div class="stat-display">
+                                    <strong>Name:</strong> <span id="preview-name">Unnamed</span><br>
+                                    <strong>Health:</strong> <span id="preview-health">100/100</span><br>
+                                    <strong>Starting Weapon:</strong> <span id="preview-weapon">None Selected</span><br>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="stat-display">
+                                    <strong>Top Skills:</strong><br>
+                                    <div id="preview-skills">None allocated</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="control-button" onclick="createCharacterFromBuilder()" id="create-character-btn" disabled>Create Character</button>
+                        <button class="control-button" onclick="resetCharacterBuilder()">Reset</button>
+                        <button class="control-button" onclick="switchToGuildState()">Cancel</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -337,42 +672,44 @@
                     WASD/Arrows: Move<br>
                     1-9: Use Abilities<br>
                     Space: Wait Turn<br>
-                    Enter: Interact<br>
                     G: Guild Base<br>
+                    M: World Map (from Guild)<br>
+                    ESC: Close Menus<br>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Guild Interface Modal -->
-    <div id="guild-interface" class="guild-interface">
-        <h2>Guild Base</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 300px;">
-            <div>
-                <h3>Create New Character</h3>
-                <input type="text" id="new-character-name" placeholder="Character Name" style="width: 100%; margin: 5px 0;">
-                <button class="control-button" onclick="createNewCharacter()">Create Character</button>
-                
-                <h3>Available Characters</h3>
-                <div id="available-characters" style="height: 150px; overflow-y: auto; border: 1px solid #333; padding: 5px;">
-                    <!-- Will show stored characters -->
-                </div>
-            </div>
-            <div>
-                <h3>Current Party</h3>
-                <div id="guild-party-display" style="height: 200px; overflow-y: auto; border: 1px solid #333; padding: 5px;">
-                    <!-- Will show current party -->
-                </div>
-                <button class="control-button" onclick="closeGuildInterface()">Close</button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Load our new systems -->
-    <script src="src/skills/SkillCategories.js"></script>
+    <script src="src/character/skills/SkillCategories.js"></script>
     <script src="src/core/EventSystem.js"></script>
     <script src="src/core/GameState.js"></script>
-    <script src="src/skills/SkillSystem.js"></script>
+    <script src="src/character/skills/SkillSystem.js"></script>
+    
+    <!-- Core abilities system - MUST be loaded in order -->
+    <script src="src/abilities/core/AbilityRegistry.js"></script>
+    <script src="src/abilities/core/AbilitySlotManager.js"></script>
+    <script src="src/abilities/core/AbilityEngine.js"></script>
+    
+    <!-- Ability definition files -->
+    <script src="src/abilities/combat/MeleeAbilities.js"></script>
+    <script src="src/abilities/combat/RangedAbilities.js"></script>
+    <script src="src/abilities/combat/DefensiveAbilities.js"></script>
+    <script src="src/abilities/combat/PhysicalDamageAbilities.js"></script>
+    <script src="src/abilities/magic/MagicAbilities.js"></script>
+    <script src="src/abilities/magic/ElementalAbilities.js"></script>
+    <script src="src/abilities/exploration/ExplorationAbilities.js"></script>
+    <script src="src/abilities/passive/PassiveAbilities.js"></script>
+    <script src="src/abilities/hybrid/HybridAbilities.js"></script>
+    
+    <script src="src/character/generator/CharacterGenerator.js"></script>
+    <script src="src/equipment/Weapons.js"></script>
+    <script src="src/enemies/EnemySystem.js"></script>
+    <script src="src/combat/CombatManager.js"></script>
+    <script src="src/combat/TurnManager.js"></script>
+    <script src="src/dungeon/DungeonGenerator.js"></script>
 
     <script>
         // Initialize game systems
@@ -380,16 +717,192 @@
         const gameState = new GameState();
         const skillSystem = new SkillSystem(eventSystem);
         
+        // Initialize new abilities system
+        const abilityRegistry = new AbilityRegistry();
+        const abilitySlotManager = new AbilitySlotManager(eventSystem);
+        const abilityEngine = new AbilityEngine(
+            eventSystem, 
+            skillSystem, 
+            abilityRegistry, 
+            abilitySlotManager, 
+            gameState
+        );
+        
+        const weaponSystem = new WeaponSystem();
+        const enemySystem = new EnemySystem();
+        const characterGenerator = new CharacterGenerator(eventSystem, skillSystem, weaponSystem);
+        const turnManager = new TurnManager(gameState, eventSystem);
+        const combatManager = new CombatManager(gameState, eventSystem, skillSystem, turnManager);
+        const dungeonGenerator = new DungeonGenerator(eventSystem, enemySystem);
+        
         let activeCharacterIndex = 0;
         let selectedAbility = null;
+
+        // Map Legend System
+        class MapSymbolTracker {
+            constructor() {
+                this.visibleSymbols = new Set();
+                this.symbolData = new Map();
+            }
+
+            // Scan a text/map content for symbols
+            scanMapContent(mapContent) {
+                this.visibleSymbols.clear();
+                this.symbolData.clear();
+
+                const lines = mapContent.split('\n');
+                for (const line of lines) {
+                    for (const char of line) {
+                        if (char && char !== ' ' && char !== '\t') {
+                            this.visibleSymbols.add(char);
+                        }
+                    }
+                }
+            }
+
+            // Get all currently visible symbols
+            getVisibleSymbols() {
+                return Array.from(this.visibleSymbols);
+            }
+
+            // Add symbol with metadata
+            addSymbolData(symbol, category, description, color = '#0f0') {
+                this.symbolData.set(symbol, { category, description, color });
+            }
+
+            // Get symbol metadata
+            getSymbolData(symbol) {
+                return this.symbolData.get(symbol);
+            }
+        }
+
+        class LegendRenderer {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.symbolDefinitions = this.initializeSymbolDefinitions();
+            }
+
+            // Define what each symbol means
+            initializeSymbolDefinitions() {
+                return {
+                    // Player & Characters
+                    '@': { category: 'Player', description: 'Your Character', color: '#ff0' },
+                    
+                    // Terrain
+                    '#': { category: 'Terrain', description: 'Wall', color: '#0f0' },
+                    '.': { category: 'Terrain', description: 'Floor', color: '#0f0' },
+                    '^': { category: 'Terrain', description: 'Mountain', color: '#888' },
+                    '~': { category: 'Terrain', description: 'Water', color: '#08f' },
+                    
+                    // Locations
+                    'G': { category: 'Locations', description: 'Guild Base', color: '#ff0' },
+                    '?': { category: 'Locations', description: 'Unknown Location', color: '#888' },
+                    'R': { category: 'Locations', description: 'Ancient Ruins', color: '#f80' },
+                    'F': { category: 'Locations', description: 'Dark Forest', color: '#080' },
+                    'C': { category: 'Locations', description: 'Crystal Caves', color: '#08f' },
+                    'T': { category: 'Locations', description: 'Shadow Tower', color: '#808' },
+                    
+                    // Items (common RPG symbols)
+                    '$': { category: 'Items', description: 'Gold', color: '#ff0' },
+                    '!': { category: 'Items', description: 'Potion', color: '#f0f' },
+                    '%': { category: 'Items', description: 'Food', color: '#fa0' },
+                    '*': { category: 'Items', description: 'Treasure', color: '#ff0' },
+                    '/': { category: 'Items', description: 'Weapon', color: '#888' },
+                    '[': { category: 'Items', description: 'Armor', color: '#888' },
+                    '=': { category: 'Items', description: 'Ring', color: '#f80' },
+                    
+                    // Doors & Containers
+                    '+': { category: 'Objects', description: 'Door', color: '#a50' },
+                    '&': { category: 'Objects', description: 'Chest', color: '#a50' },
+                    '{': { category: 'Objects', description: 'Container', color: '#888' },
+                    
+                    // Common enemy letters (will be enhanced later)
+                    'g': { category: 'Enemies', description: 'Goblin', color: '#f00' },
+                    'r': { category: 'Enemies', description: 'Rat', color: '#f00' },
+                    's': { category: 'Enemies', description: 'Skeleton', color: '#f00' },
+                    'o': { category: 'Enemies', description: 'Orc', color: '#f00' },
+                    'w': { category: 'Enemies', description: 'Wolf', color: '#f00' },
+                    'b': { category: 'Enemies', description: 'Bandit', color: '#f00' },
+                    'D': { category: 'Enemies', description: 'Dragon', color: '#f00' }
+                };
+            }
+
+            // Render the legend based on visible symbols
+            render(visibleSymbols) {
+                if (!this.container) return;
+
+                // Group symbols by category
+                const categories = {};
+                const unknown = [];
+
+                visibleSymbols.forEach(symbol => {
+                    const definition = this.symbolDefinitions[symbol];
+                    if (definition) {
+                        if (!categories[definition.category]) {
+                            categories[definition.category] = [];
+                        }
+                        categories[definition.category].push({ symbol, ...definition });
+                    } else {
+                        // Track unknown symbols
+                        unknown.push(symbol);
+                    }
+                });
+
+                // Build HTML
+                let html = '';
+                
+                // Define category order for consistent display
+                const categoryOrder = ['Player', 'Terrain', 'Locations', 'Enemies', 'Items', 'Objects'];
+                
+                categoryOrder.forEach(categoryName => {
+                    if (categories[categoryName] && categories[categoryName].length > 0) {
+                        html += `<div class="legend-category">`;
+                        html += `<div class="legend-category-title">${categoryName}</div>`;
+                        
+                        categories[categoryName].forEach(item => {
+                            html += `<div class="legend-item">`;
+                            html += `<span class="legend-symbol" style="color: ${item.color}">${item.symbol}</span>`;
+                            html += `<span class="legend-description">${item.description}</span>`;
+                            html += `</div>`;
+                        });
+                        
+                        html += `</div>`;
+                    }
+                });
+
+                // Add unknown symbols if any
+                if (unknown.length > 0) {
+                    html += `<div class="legend-category">`;
+                    html += `<div class="legend-category-title">Unknown</div>`;
+                    unknown.forEach(symbol => {
+                        html += `<div class="legend-item">`;
+                        html += `<span class="legend-symbol">${symbol}</span>`;
+                        html += `<span class="legend-description">Unknown Symbol</span>`;
+                        html += `</div>`;
+                    });
+                    html += `</div>`;
+                }
+
+                this.container.innerHTML = html || '<div style="color: #888; font-size: 10px;">No symbols to display</div>';
+            }
+        }
+
+        // Initialize legend system
+        const mapSymbolTracker = new MapSymbolTracker();
+        const legendRenderer = new LegendRenderer('map-legend');
+        
 
         // Initialize game
         function initializeGame() {
             setupEventListeners();
             setupKeyboardControls();
             updateAllDisplays();
+            // Start at guild base, so update guild interface instead of map
+            updateGuildInterface();
+            // Clear the legend since we're not in a map view
+            document.getElementById('map-legend').innerHTML = '<div style="color: #888; font-size: 10px;">No map active</div>';
             addLog('Single-player party-based roguelike initialized!', 'system');
-            addLog('Press G or click Guild Base to create your party.', 'system');
+            addLog('Welcome to the Guild Base! Create your party to begin.', 'system');
         }
 
         // Event listeners for game systems
@@ -404,76 +917,170 @@
                 updateAllDisplays();
             });
 
-            eventSystem.on('COMBAT_STARTED', (data) => {
-                addLog('Combat begins!', 'combat');
-                updateAllDisplays();
+            // Combat events with consolidated logging
+            const combatEvents = {
+                'COMBAT_STARTED': (d) => `Combat begins! ${d.partyMembers?.length || 0} party members vs ${d.enemies?.length || 0} enemies`,
+                'COMBAT_ENDED': (d) => `Combat ended: ${d.victory ? 'Victory!' : 'Defeat'}`,
+                'TURN_STARTED': (d) => `${d.character?.name || d.enemy?.name || d.entityId}'s turn begins (${d.ap || 0} AP)`,
+                'DAMAGE_DEALT': (d) => `${d.attackerId} deals ${d.damage} damage to ${d.targetId}`,
+                'CHARACTER_DIED': (d) => `${d.characterId} has been defeated!`,
+                'PARTY_WIPE': (d) => `PARTY WIPED! ${d.charactersLost} characters lost to permadeath.`
+            };
+            
+            Object.entries(combatEvents).forEach(([event, messageFunc]) => {
+                eventSystem.on(event, (data) => {
+                    addLog(messageFunc(data), event === 'TURN_STARTED' ? 'turn' : 'combat');
+                    updateAllDisplays();
+                });
             });
+            
+            eventSystem.on('COMBAT_MESSAGE', (data) => addLog(data.message, 'combat'));
         }
 
-        // Keyboard controls
         function setupKeyboardControls() {
+            const keyHandlers = {
+                w: () => currentUIState === 'dungeon' ? handleMovement(0, -1) : null,
+                arrowup: () => currentUIState === 'dungeon' ? handleMovement(0, -1) : null,
+                s: () => currentUIState === 'dungeon' ? handleMovement(0, 1) : null,
+                arrowdown: () => currentUIState === 'dungeon' ? handleMovement(0, 1) : null,
+                a: () => currentUIState === 'dungeon' ? handleMovement(-1, 0) : null,
+                arrowleft: () => currentUIState === 'dungeon' ? handleMovement(-1, 0) : null,
+                d: () => currentUIState === 'dungeon' ? handleMovement(1, 0) : null,
+                arrowright: () => currentUIState === 'dungeon' ? handleMovement(1, 0) : null,
+                g: () => {
+                    if (currentUIState === 'guild') {
+                        switchToDungeonState();
+                    } else {
+                        switchToGuildState();
+                    }
+                },
+                m: () => {
+                    if (currentUIState === 'world-map') {
+                        switchToDungeonState();
+                    } else if (currentUIState === 'dungeon' || currentUIState === 'guild') {
+                        switchToWorldMapState();
+                    }
+                },
+                escape: () => {
+                    if (currentUIState !== 'dungeon') {
+                        switchToDungeonState();
+                    }
+                },
+                ' ': () => currentUIState === 'dungeon' ? handleWait() : null
+            };
+            
             document.addEventListener('keydown', (e) => {
-                if (document.getElementById('guild-interface').classList.contains('active')) {
-                    return; // Don't handle game keys when guild interface is open
+                // Check if an input field is focused
+                const activeElement = document.activeElement;
+                const isInputFocused = activeElement && (
+                    activeElement.tagName === 'INPUT' || 
+                    activeElement.tagName === 'TEXTAREA' ||
+                    activeElement.contentEditable === 'true'
+                );
+                
+                // Don't handle game keys when typing in input fields
+                if (isInputFocused) {
+                    return;
                 }
-
-                switch(e.key.toLowerCase()) {
-                    case 'w':
-                    case 'arrowup':
-                        handleMovement(0, -1);
-                        e.preventDefault();
-                        break;
-                    case 's':
-                    case 'arrowdown':
-                        handleMovement(0, 1);
-                        e.preventDefault();
-                        break;
-                    case 'a':
-                    case 'arrowleft':
-                        handleMovement(-1, 0);
-                        e.preventDefault();
-                        break;
-                    case 'd':
-                    case 'arrowright':
-                        handleMovement(1, 0);
-                        e.preventDefault();
-                        break;
-                    case 'g':
-                        toggleGuildInterface();
-                        e.preventDefault();
-                        break;
-                    case ' ':
-                        handleWait();
-                        e.preventDefault();
-                        break;
-                    case '1': case '2': case '3': case '4': case '5':
-                    case '6': case '7': case '8': case '9':
-                        handleAbilityKey(parseInt(e.key));
-                        e.preventDefault();
-                        break;
+                
+                // Handle keyboard based on current UI state
+                const key = e.key.toLowerCase();
+                const handler = keyHandlers[key];
+                
+                if (handler) {
+                    handler();
+                    e.preventDefault();
+                } else if (/^[1-9]$/.test(e.key) && currentUIState === 'dungeon') {
+                    handleAbilityKey(parseInt(e.key));
+                    e.preventDefault();
                 }
             });
         }
 
-        // Game actions
         function handleMovement(dx, dy) {
-            if (gameState.party.members.size === 0) {
+            if (!gameState.party.members.size) {
                 addLog('No party members! Visit Guild Base to create characters.', 'system');
                 return;
             }
 
-            // For now, just update position and use a movement skill
-            gameState.location.playerX += dx;
-            gameState.location.playerY += dy;
+            // Calculate new position
+            const newX = gameState.location.playerX + dx;
+            const newY = gameState.location.playerY + dy;
             
-            // Award movement skill XP to active character
-            const activeCharacter = getActiveCharacter();
-            if (activeCharacter) {
-                skillSystem.awardSkillUse(activeCharacter, 'running', 'trivial', 2);
+            // Check if new position is valid (not a wall)
+            if (!canMoveTo(newX, newY)) {
+                addLog('There is a wall blocking your path!', 'system');
+                return;
             }
+
+            // Move the player
+            gameState.location.playerX = newX;
+            gameState.location.playerY = newY;
+            
+            const activeCharacter = getActiveCharacter();
+            if (activeCharacter) skillSystem.awardSkillUse(activeCharacter, 'running', 'trivial', 2);
             
             updateMapDisplay();
-            addLog(`Moved to (${gameState.location.playerX}, ${gameState.location.playerY})`, 'system');
+            // Don't log every movement - it's too verbose
+        }
+
+        function canMoveTo(x, y) {
+            // Check if we're in a dungeon
+            if (gameState.currentRun.active) {
+                // Get current room template
+                const currentRoom = gameState.currentRun.floor || 1;
+                const template = dungeonGenerator.getCurrentTemplate(currentRoom);
+                
+                if (!template) return false;
+                
+                // Check boundaries
+                if (x < 0 || x >= template.width || y < 0 || y >= template.height) {
+                    return false;
+                }
+                
+                // Check if the position is a wall
+                if (template.walls) {
+                    for (const [wallX, wallY] of template.walls) {
+                        if (wallX === x && wallY === y) {
+                            return false; // Position is a wall
+                        }
+                    }
+                }
+                
+                // Check if there's an object at this position
+                if (template.objects) {
+                    for (const obj of template.objects) {
+                        if (obj.x === x && obj.y === y) {
+                            // Different messages for different object types
+                            switch(obj.type) {
+                                case 'chest':
+                                    addLog(`There's a chest here. Press E to interact.`, 'system');
+                                    return false;
+                                case 'door':
+                                    if (obj.locked) {
+                                        addLog(`The door is locked. You need a key.`, 'system');
+                                    } else {
+                                        addLog(`There's a door here. Press E to open.`, 'system');
+                                    }
+                                    return false;
+                                case 'container':
+                                    addLog(`There's a container here. Press E to search it.`, 'system');
+                                    return false;
+                                default:
+                                    if (obj.blocksMovement) {
+                                        addLog(`The ${obj.type} is blocking your way!`, 'system');
+                                        return false;
+                                    }
+                            }
+                        }
+                    }
+                }
+                
+                return true; // Position is walkable
+            } else {
+                // For non-dungeon areas, allow free movement for now
+                return true;
+            }
         }
 
         function handleAbilityKey(abilityNum) {
@@ -483,17 +1090,36 @@
                 return;
             }
 
-            // For now, just use a random skill based on ability number
-            const skillKeys = Object.keys(activeCharacter.skills);
-            const skillKey = skillKeys[abilityNum - 1] || 'one_handed';
+            // Get slotted ability for this hotkey (0-indexed, so subtract 1)
+            const slotIndex = abilityNum - 1;
+            const slots = abilitySlotManager.initializeSlots(activeCharacter);
+            const abilityKey = slots.active[slotIndex];
             
-            const difficulties = ['easy', 'normal', 'hard'];
-            const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+            if (!abilityKey) {
+                addLog(`No ability slotted in slot ${abilityNum}`, 'system');
+                return;
+            }
+
+            // Use the ability through the engine
+            const result = abilityEngine.useAbility(activeCharacter, abilityKey);
             
-            skillSystem.awardSkillUse(activeCharacter, skillKey, difficulty, 10);
+            if (result.success) {
+                const ability = abilityRegistry.getAbility(abilityKey);
+                addLog(`${activeCharacter.name} uses ${ability.name}!`, 'combat');
+                
+                // Show effects if any
+                if (result.effects && Object.keys(result.effects).length > 0) {
+                    const effectsText = Object.entries(result.effects)
+                        .map(([effect, value]) => `${effect}: ${value}`)
+                        .join(', ');
+                    addLog(`Effects: ${effectsText}`, 'combat');
+                }
+            } else {
+                const ability = abilityRegistry.getAbility(abilityKey);
+                addLog(`${activeCharacter.name}'s ${ability ? ability.name : abilityKey} failed: ${result.reason}`, 'combat');
+            }
             
-            const skillInfo = skillSystem.getSkillInfo(skillKey);
-            addLog(`${activeCharacter.name} uses ${skillInfo ? skillInfo.name : skillKey}!`, 'combat');
+            updateAllDisplays();
         }
 
         function handleWait() {
@@ -501,59 +1127,472 @@
         }
 
         // Guild interface
+        // Legacy functions - now redirect to new state system
         function toggleGuildInterface() {
-            const guildInterface = document.getElementById('guild-interface');
-            guildInterface.classList.toggle('active');
-            
-            if (guildInterface.classList.contains('active')) {
-                updateGuildInterface();
+            if (currentUIState === 'guild') {
+                switchToDungeonState();
+            } else {
+                switchToGuildState();
             }
         }
 
         function closeGuildInterface() {
-            document.getElementById('guild-interface').classList.remove('active');
+            switchToDungeonState();
+        }
+
+        // World Map System
+        const dungeonLocations = [
+            {
+                id: 'ancient_ruins',
+                name: 'Ancient Ruins',
+                symbol: 'R',
+                x: 5, y: 3,
+                difficulty: 'Easy',
+                floors: 3,
+                description: 'Crumbling stone ruins filled with weak undead and basic treasures. Perfect for new adventurers.',
+                unlocked: true
+            },
+            {
+                id: 'dark_forest',
+                name: 'Dark Forest Depths', 
+                symbol: 'F',
+                x: 12, y: 6,
+                difficulty: 'Medium',
+                floors: 4,
+                description: 'A twisted woodland where corrupted beasts and nature spirits guard ancient secrets.',
+                unlocked: true
+            },
+            {
+                id: 'crystal_caves',
+                name: 'Crystal Caves',
+                symbol: 'C',
+                x: 20, y: 4,
+                difficulty: 'Hard',
+                floors: 5,
+                description: 'Deep caverns lined with magical crystals. Dangerous elementals protect valuable gems.',
+                unlocked: false
+            },
+            {
+                id: 'shadow_tower',
+                name: 'Shadow Tower',
+                symbol: 'T',
+                x: 15, y: 12,
+                difficulty: 'Nightmare',
+                floors: 6,
+                description: 'A dark spire that pierces the sky. Only the strongest parties dare enter its cursed halls.',
+                unlocked: false
+            }
+        ];
+
+        let selectedLocation = null;
+
+        // Legacy function - now redirects to new state system
+        function openWorldMap() {
+            switchToWorldMapState();
+        }
+
+        function renderWorldMap() {
+            const mapGrid = document.getElementById('world-map-grid');
+            const mapWidth = 60;  // Much larger for center panel
+            const mapHeight = 30; // Much larger for center panel
+            
+            // Create ASCII world map
+            let mapData = [];
+            for (let y = 0; y < mapHeight; y++) {
+                mapData[y] = new Array(mapWidth).fill('.');
+            }
+            
+            // Add terrain features
+            for (let x = 0; x < mapWidth; x++) {
+                for (let y = 0; y < mapHeight; y++) {
+                    if (Math.random() < 0.1) {
+                        mapData[y][x] = (Math.random() < 0.5) ? '^' : '~';
+                    }
+                }
+            }
+            
+            // Place guild base (centered in larger map)
+            mapData[15][5] = 'G';
+            
+            // Update dungeon locations for larger map
+            const scaledLocations = [
+                { ...dungeonLocations[0], x: 10, y: 6 },  // Ancient Ruins
+                { ...dungeonLocations[1], x: 25, y: 12 }, // Dark Forest
+                { ...dungeonLocations[2], x: 45, y: 8 },  // Crystal Caves
+                { ...dungeonLocations[3], x: 35, y: 20 }  // Shadow Tower
+            ];
+            
+            // Place dungeon locations
+            scaledLocations.forEach((location, index) => {
+                if (location.y < mapHeight && location.x < mapWidth) {
+                    mapData[location.y][location.x] = dungeonLocations[index].unlocked ? location.symbol : '?';
+                    // Update original locations for click handling
+                    dungeonLocations[index].x = location.x;
+                    dungeonLocations[index].y = location.y;
+                }
+            });
+            
+            // Render map
+            let html = '<div style="line-height: 1.2;">';
+            for (let y = 0; y < mapHeight; y++) {
+                let row = '';
+                for (let x = 0; x < mapWidth; x++) {
+                    const char = mapData[y][x];
+                    const location = dungeonLocations.find(loc => loc.x === x && loc.y === y && loc.unlocked);
+                    
+                    if (location) {
+                        row += `<span class="world-location" data-location="${location.id}" onclick="selectLocation('${location.id}')">${char}</span>`;
+                    } else if (char === 'G') {
+                        row += `<span style="color: #ffff00;">${char}</span>`;
+                    } else {
+                        row += char;
+                    }
+                }
+                html += row + '<br>';
+            }
+            html += '</div>';
+            html += '<div style="margin-top: 10px; font-size: 10px;">';
+            html += 'G=Guild Base, R=Ruins, F=Forest, C=Caves, T=Tower, ?=Locked Location';
+            html += '</div>';
+            
+            mapGrid.innerHTML = html;
+            
+            // Update legend for world map
+            updateWorldMapLegend(mapData);
+        }
+
+        function selectLocation(locationId) {
+            selectedLocation = locationId;
+            const location = dungeonLocations.find(loc => loc.id === locationId);
+            
+            // Remove previous selection
+            document.querySelectorAll('.world-location').forEach(el => el.classList.remove('selected'));
+            // Add selection to clicked location
+            document.querySelector(`[data-location="${locationId}"]`).classList.add('selected');
+            
+            // Show location info
+            const infoDiv = document.getElementById('location-info');
+            infoDiv.innerHTML = `
+                <h4>${location.name}</h4>
+                <p><strong>Difficulty:</strong> ${location.difficulty}</p>
+                <p><strong>Floors:</strong> ${location.floors}</p>
+                <p><strong>Description:</strong> ${location.description}</p>
+                <p><strong>Status:</strong> ${location.unlocked ? 'Available' : 'Locked'}</p>
+            `;
+        }
+
+        function enterSelectedDungeon() {
+            if (!selectedLocation) {
+                addLog('Please select a location first.', 'system');
+                return;
+            }
+            
+            const location = dungeonLocations.find(loc => loc.id === selectedLocation);
+            if (!location.unlocked) {
+                addLog('This location is locked. Complete other dungeons to unlock it.', 'system');
+                return;
+            }
+            
+            // Switch to dungeon state
+            switchToDungeonState();
+            
+            // Start dungeon run with selected location
+            const runResult = gameState.startNewRun();
+            if (runResult.success) {
+                gameState.currentRun.locationTheme = selectedLocation;
+                gameState.currentRun.maxFloor = location.floors;
+                addLog(`Entering ${location.name}... Prepare for adventure!`, 'system');
+                updateMapDisplay();
+            } else {
+                addLog(`Failed to start run: ${runResult.reason}`, 'system');
+            }
+        }
+
+        function returnToGuild() {
+            switchToDungeonState();
+            gameState.returnToGuild();
+            updateMapDisplay();
+            addLog('Returned to Guild Base.', 'system');
         }
 
         function createNewCharacter() {
-            const nameInput = document.getElementById('new-character-name');
-            const characterName = nameInput.value.trim();
+            // Switch to character creation state and initialize
+            switchToCharacterCreationState();
+            // Initialize the character generator
+            characterGenerator.openCharacterCreation();
+        }
+        
+        function createRandomCharacter() {
+            // Generate a random name
+            const randomNames = [
+                'Aldric', 'Bryenna', 'Caelum', 'Dara', 'Ewan', 'Fiona', 'Gareth', 'Hilda',
+                'Ivan', 'Jora', 'Kael', 'Luna', 'Magnus', 'Nora', 'Orin', 'Petra',
+                'Quinn', 'Raven', 'Soren', 'Thora', 'Ulric', 'Vera', 'Wren', 'Xara',
+                'Yorick', 'Zara', 'Ash', 'Blaze', 'Cole', 'Dawn', 'Echo', 'Fox'
+            ];
+            const randomName = randomNames[Math.floor(Math.random() * randomNames.length)];
             
-            if (!characterName) {
-                alert('Please enter a character name');
-                return;
-            }
-
-            // Create new character
+            // Generate random character
+            const randomCharacter = generateRandomCharacter(randomName);
+            
+            // Add to guild storage
+            gameState.guild.storedCharacters.set(randomCharacter.id, randomCharacter);
+            
+            // Initialize abilities
+            initializeCharacterAbilities(randomCharacter);
+            
+            // Update displays
+            updateGuildInterface();
+            
+            addLog(`Created random character: ${randomCharacter.name}`, 'system');
+        }
+        
+        function generateRandomCharacter(name) {
+            // Get all available skills from the skill system
+            const allSkills = Object.keys(skillSystem.skillDefinitions);
+            
+            // Create base character
             const character = {
-                id: `char_${Date.now()}`,
-                name: characterName,
+                id: `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                name: name,
                 health: 100,
                 maxHealth: 100,
-                level: 1,
-                skills: skillSystem.initializeCharacterSkills()
+                ap: 3,
+                maxAP: 3,
+                skills: {},
+                equipment: {
+                    weapon: null,
+                    armor: null,
+                    accessories: []
+                },
+                x: 12,
+                y: 10
             };
-
-            // Give some random starting skills
-            const startingSkills = ['one_handed', 'archery', 'sneaking', 'climbing', 'alertness'];
-            startingSkills.forEach(skillKey => {
-                skillSystem.advanceSkill(character, skillKey, Math.floor(Math.random() * 5) + 1);
+            
+            // Randomly allocate 25 skill points
+            let remainingPoints = 25;
+            const selectedSkills = [];
+            
+            // Pick 3-6 random skills to focus on
+            const numSkills = 3 + Math.floor(Math.random() * 4);
+            for (let i = 0; i < numSkills && remainingPoints > 0; i++) {
+                const randomSkill = allSkills[Math.floor(Math.random() * allSkills.length)];
+                if (!selectedSkills.includes(randomSkill)) {
+                    selectedSkills.push(randomSkill);
+                }
+            }
+            
+            // Distribute points among selected skills
+            selectedSkills.forEach(skillKey => {
+                if (remainingPoints > 0) {
+                    const maxPoints = Math.min(10, remainingPoints); // Cap at 10 points per skill
+                    const points = 1 + Math.floor(Math.random() * maxPoints);
+                    character.skills[skillKey] = {
+                        level: points,
+                        experience: 0,
+                        mastery: skillSystem.getMasteryLevel(points)
+                    };
+                    remainingPoints -= points;
+                }
             });
-
+            
+            // Spend any remaining points randomly
+            while (remainingPoints > 0) {
+                const randomSkill = allSkills[Math.floor(Math.random() * allSkills.length)];
+                if (!character.skills[randomSkill]) {
+                    character.skills[randomSkill] = { level: 0, experience: 0, mastery: 'Novice' };
+                }
+                if (character.skills[randomSkill].level < 10) {
+                    character.skills[randomSkill].level++;
+                    character.skills[randomSkill].mastery = skillSystem.getMasteryLevel(character.skills[randomSkill].level);
+                    remainingPoints--;
+                }
+            }
+            
+            // Select a random starting weapon
+            const weaponTypes = ['sword', 'axe', 'dagger', 'staff', 'bow', 'mace'];
+            const randomWeaponType = weaponTypes[Math.floor(Math.random() * weaponTypes.length)];
+            character.equipment.weapon = weaponSystem.createWeapon(randomWeaponType, 1);
+            
+            return character;
+        }
+        
+        function createFullRandomCharacter() {
+            const name = document.getElementById('char-name-input').value.trim();
+            if (!name) {
+                addLog('Please enter a character name first!', 'system');
+                return;
+            }
+            
+            // Generate and preview random character
+            const randomCharacter = generateRandomCharacter(name);
+            
+            // Show preview
+            updateCharacterPreview(randomCharacter);
+            
+            // Store temporarily for finalization
+            window.tempCharacter = randomCharacter;
+        }
+        
+        function updateCharacterPreview(character) {
+            const preview = document.getElementById('character-preview');
+            if (!character) {
+                preview.innerHTML = '<p>Enter a name and choose creation method to preview your character.</p>';
+                return;
+            }
+            
+            let html = `<h4>${character.name}</h4>`;
+            html += `<p><strong>Health:</strong> ${character.maxHealth}</p>`;
+            html += `<p><strong>AP:</strong> ${character.maxAP}</p>`;
+            html += `<p><strong>Weapon:</strong> ${character.equipment.weapon ? character.equipment.weapon.name : 'None'}</p>`;
+            
+            html += '<h5>Skills:</h5>';
+            const skills = Object.entries(character.skills)
+                .filter(([key, skill]) => skill.level > 0)
+                .sort((a, b) => b[1].level - a[1].level);
+                
+            if (skills.length > 0) {
+                skills.forEach(([skillKey, skill]) => {
+                    const skillDef = skillSystem.skillDefinitions[skillKey];
+                    const name = skillDef ? skillDef.name : skillKey;
+                    html += `<div>${name}: ${skill.level} (${skill.mastery})</div>`;
+                });
+            } else {
+                html += '<div>No skills allocated</div>';
+            }
+            
+            preview.innerHTML = html;
+        }
+        
+        function finalizeCharacterCreation() {
+            if (!window.tempCharacter) {
+                addLog('No character to create! Generate a character first.', 'system');
+                return;
+            }
+            
+            const character = window.tempCharacter;
+            
             // Add to guild storage
             gameState.guild.storedCharacters.set(character.id, character);
             
-            // Add to party if there's room
-            if (gameState.party.members.size < 6) {
-                const result = gameState.addPartyMember(character);
-                if (result.success) {
-                    eventSystem.emit('PARTY_MEMBER_ADDED', { characterId: character.id });
+            // Initialize abilities
+            initializeCharacterAbilities(character);
+            
+            // Clean up
+            window.tempCharacter = null;
+            
+            // Return to guild
+            switchToGuildState();
+            updateGuildInterface();
+            
+            addLog(`Created character: ${character.name}`, 'system');
+        }
+        
+        function generateRandomCharacterData() {
+            if (!characterGenerator || !characterGenerator.characterBuilder) {
+                addLog('Character generator not ready. Please try again.', 'system');
+                return;
+            }
+            
+            // Preserve the current name
+            const currentName = document.getElementById('character-name-input').value;
+            
+            // Reset only the skill allocation and weapon selection, not the name
+            characterGenerator.characterBuilder.allocatedSkills = {};
+            characterGenerator.characterBuilder.availablePoints = 25;
+            characterGenerator.characterBuilder.selectedWeapon = null;
+            
+            // Update the available points display
+            const pointsDisplay = document.getElementById('available-skill-points');
+            if (pointsDisplay) pointsDisplay.textContent = '25';
+            
+            // Clear all skill displays
+            const allSkills = [];
+            Object.keys(SKILL_CATEGORIES).forEach(categoryKey => {
+                const category = SKILL_CATEGORIES[categoryKey];
+                Object.keys(category.skills).forEach(skillKey => {
+                    allSkills.push(skillKey);
+                    const skillDisplay = document.getElementById(`skill-${skillKey}`);
+                    if (skillDisplay) skillDisplay.textContent = '0';
+                });
+            });
+            
+            // Allocate all 25 points randomly
+            let pointsToAllocate = 25;
+            let attempts = 0;
+            const maxAttempts = 1000; // Prevent infinite loop
+            
+            while (pointsToAllocate > 0 && attempts < maxAttempts) {
+                attempts++;
+                const randomSkill = allSkills[Math.floor(Math.random() * allSkills.length)];
+                const currentPoints = characterGenerator.characterBuilder.allocatedSkills[randomSkill] || 0;
+                
+                // Only add points if we haven't maxed this skill (max 10 per skill)
+                if (currentPoints < 10) {
+                    characterGenerator.adjustSkillPoints(randomSkill, 1);
+                    pointsToAllocate--;
                 }
             }
-
-            nameInput.value = '';
-            updateGuildInterface();
-            addLog(`Created character: ${characterName}`, 'system');
+            
+            // Restore the name
+            document.getElementById('character-name-input').value = currentName;
+            
+            // Select a random starting weapon
+            const weapons = characterGenerator.weaponSystem.getStartingWeapons();
+            if (weapons && weapons.length > 0) {
+                const randomWeapon = weapons[Math.floor(Math.random() * weapons.length)];
+                characterGenerator.selectWeapon(randomWeapon.id);
+            }
+            
+            addLog('Generated random character data with all 25 skill points allocated!', 'system');
         }
+
+        // Character Creation Functions
+        const openCharacterCreation = () => characterGenerator.openCharacterCreation();
+        const closeCharacterCreation = () => characterGenerator.closeCharacterCreation();
+        const resetCharacterBuilder = () => characterGenerator.resetCharacterBuilder();
+
+        // Initialize character abilities with default slots
+        function initializeCharacterAbilities(character) {
+            abilitySlotManager.initializeSlots(character);
+            const basicAbilities = ['basic_attack', 'move', 'wait', 'defend'];
+            basicAbilities.forEach((ability, index) => {
+                abilitySlotManager.slotActiveAbility(character, ability, index);
+            });
+            
+            const availableAbilities = abilityEngine.getAvailableAbilities(character);
+            const skillAbility = availableAbilities.find(a => a.skillRequirements.length > 0);
+            if (skillAbility && availableAbilities.length > 4) {
+                abilitySlotManager.slotActiveAbility(character, skillAbility.key, 4);
+                addLog(`${character.name} learned ${skillAbility.name}!`, 'system');
+            }
+            return availableAbilities;
+        }
+
+        function createCharacterFromBuilder() {
+            const character = characterGenerator.createCharacterFromBuilder(gameState);
+            if (character) {
+                const availableAbilities = initializeCharacterAbilities(character);
+                gameState.guild.storedCharacters.set(character.id, character);
+                
+                if (gameState.party.members.size < 6) {
+                    const result = gameState.addPartyMember(character);
+                    if (result.success) {
+                        eventSystem.emit('PARTY_MEMBER_ADDED', { characterId: character.id });
+                    }
+                }
+
+                // Return to guild state
+                switchToGuildState();
+                updateGuildInterface();
+                addLog(`Created character: ${character.name}`, 'system');
+                addLog(`Abilities ready: ${availableAbilities.length} total available`, 'system');
+            }
+        }
+
+        document.addEventListener('input', (e) => {
+            if (e.target.id === 'character-name-input') characterGenerator.handleNameInput();
+        });
 
         // Utility functions
         function getActiveCharacter() {
@@ -584,20 +1623,61 @@
             }
         }
 
-        // Display updates
-        function updateAllDisplays() {
+        // Test combat functionality
+        function testCombat() {
+            if (gameState.party.members.size === 0) {
+                alert('You need party members to test combat! Visit the Guild Base first.');
+                return;
+            }
+
+            if (gameState.combat.active) {
+                // End current combat
+                combatManager.forceEndCombat();
+                addLog('Combat test ended', 'system');
+            } else {
+                // Start test combat
+                const result = combatManager.forceStartCombat();
+                if (result.success) {
+                    addLog('Test combat started!', 'system');
+                } else {
+                    alert(`Failed to start combat: ${result.reason}`);
+                }
+            }
+        }
+
+        const updateAllDisplays = () => {
             updateGameStatus();
             updatePartyDisplay();
             updateActiveCharacterDisplay();
             updateAbilitiesDisplay();
             updateQuickStats();
-        }
+        };
 
-        function updateGameStatus() {
-            document.getElementById('location-display').textContent = gameState.location.type;
-            document.getElementById('current-floor').textContent = gameState.currentRun.active ? gameState.currentRun.floor : '-';
-            document.getElementById('current-room').textContent = gameState.currentRun.active ? '1' : '-';
-            document.getElementById('party-gold').textContent = gameState.party.gold;
+        const updateGameStatus = () => {
+            const elements = {
+                'location-display': gameState.location.type,
+                'current-floor': gameState.currentRun.active ? gameState.currentRun.floor : '-',
+                'current-room': gameState.currentRun.active ? '1' : '-',
+                'party-gold': gameState.party.gold
+            };
+            Object.entries(elements).forEach(([id, value]) => {
+                document.getElementById(id).textContent = value;
+            });
+        };
+
+        // Utility function to create character display elements
+        function createCharacterDisplay(character, className, onClick, extraInfo = '') {
+            const div = document.createElement('div');
+            div.className = className;
+            if (onClick) div.onclick = onClick;
+            
+            const mastery = skillSystem.getMasteryLevel(character);
+            div.innerHTML = `
+                <div>${character.name} (${mastery})</div>
+                <div>HP: ${character.health}/${character.maxHealth}</div>
+                <div>Level: ${character.level}${extraInfo}</div>
+            `;
+            return div;
         }
 
         function updatePartyDisplay() {
@@ -606,24 +1686,26 @@
             
             partyContainer.innerHTML = '';
             partyMembers.forEach((character, index) => {
-                const memberDiv = document.createElement('div');
-                memberDiv.className = `party-member ${index === activeCharacterIndex ? 'active' : ''}`;
-                memberDiv.onclick = () => {
-                    activeCharacterIndex = index;
-                    updateAllDisplays();
-                };
-                
-                const mastery = skillSystem.getMasteryLevel(character);
-                memberDiv.innerHTML = `
-                    <div>${character.name} (${mastery})</div>
-                    <div>HP: ${character.health}/${character.maxHealth}</div>
-                    <div>Level: ${character.level}</div>
-                `;
+                const memberDiv = createCharacterDisplay(
+                    character,
+                    `party-member ${index === activeCharacterIndex ? 'active' : ''}`,
+                    () => { activeCharacterIndex = index; updateAllDisplays(); }
+                );
                 partyContainer.appendChild(memberDiv);
             });
 
-            // Update party title
             document.querySelector('.party-section .status-title').textContent = `Party (${partyMembers.length}/6)`;
+            
+            // Update location display
+            const locationDisplay = document.getElementById('location-display');
+            if (gameState.location.type === 'guild') {
+                locationDisplay.textContent = 'Guild Base';
+            } else if (gameState.location.type === 'overworld') {
+                const theme = gameState.currentRun.locationTheme;
+                locationDisplay.textContent = theme ? theme.name : 'Dungeon Floor ' + gameState.currentRun.floor;
+            } else if (gameState.location.type === 'combat') {
+                locationDisplay.textContent = 'Combat!';
+            }
         }
 
         function updateActiveCharacterDisplay() {
@@ -646,45 +1728,230 @@
             document.getElementById('health-fill').style.width = `${healthPercent}%`;
         }
 
+        // Utility function to create ability slot HTML
+        function createAbilitySlotHTML(slotNum, name, apText, available = false) {
+            return `<div class="ability-name">[${slotNum}] ${name}</div><div class="ability-ap">${apText}</div>`;
+        }
+
         function updateAbilitiesDisplay() {
             const abilitiesGrid = document.getElementById('abilities-grid');
+            const activeCharacter = getActiveCharacter();
+            const slots = activeCharacter ? abilitySlotManager.initializeSlots(activeCharacter) : null;
+            
             abilitiesGrid.innerHTML = '';
 
             for (let i = 1; i <= 9; i++) {
                 const slot = document.createElement('div');
-                slot.className = 'ability-slot available';
-                slot.innerHTML = `
-                    <div class="ability-name">[${i}] Skill</div>
-                    <div class="ability-ap">Use Skill</div>
-                `;
-                slot.onclick = () => handleAbilityKey(i);
+                const slotIndex = i - 1;
+                
+                if (!activeCharacter) {
+                    slot.className = 'ability-slot unavailable';
+                    slot.innerHTML = createAbilitySlotHTML(i, 'Empty', 'No Character');
+                } else {
+                    const abilityKey = slots.active[slotIndex];
+                    
+                    if (abilityKey) {
+                        const ability = abilityRegistry.getAbility(abilityKey);
+                        const canUse = abilityEngine.canUseAbility(activeCharacter, abilityKey);
+                        const apCost = abilityRegistry.calculateAPCost(activeCharacter, ability);
+                        const successRate = abilityRegistry.calculateSuccessRate(activeCharacter, abilityKey);
+                        
+                        slot.className = `ability-slot ${canUse.canUse ? 'available' : 'unavailable'}`;
+                        slot.innerHTML = createAbilitySlotHTML(i, ability.name, `${apCost}AP (${successRate}%)`);
+                        slot.onclick = canUse.canUse ? () => handleAbilityKey(i) : null;
+                        if (!canUse.canUse) slot.title = canUse.reason;
+                    } else {
+                        slot.className = 'ability-slot unavailable';
+                        slot.innerHTML = createAbilitySlotHTML(i, 'Empty', 'No Ability');
+                        slot.onclick = () => openAbilitySlotting(activeCharacter, slotIndex);
+                    }
+                }
+                
                 abilitiesGrid.appendChild(slot);
             }
         }
-
-        function updateMapDisplay() {
-            const mapDisplay = document.getElementById('map-display');
-            const x = gameState.location.playerX;
-            const y = gameState.location.playerY;
-            
-            let mapContent = `Position: (${x}, ${y})\n\n`;
-            
-            // Simple ASCII map representation
-            for (let row = y - 10; row <= y + 10; row++) {
-                let line = '';
-                for (let col = x - 20; col <= x + 20; col++) {
-                    if (col === x && row === y) {
-                        line += '@';  // Player
-                    } else if (Math.abs(col - x) + Math.abs(row - y) < 5) {
-                        line += '.';  // Floor
-                    } else {
-                        line += '#';  // Wall
-                    }
-                }
-                mapContent += line + '\n';
+        
+        function openAbilitySlotting(character, slotIndex) {
+            const availableAbilities = abilityEngine.getAvailableAbilities(character);
+            if (!availableAbilities.length) {
+                addLog(`${character.name} has no abilities available to slot`, 'system');
+                return;
             }
             
-            mapDisplay.textContent = mapContent;
+            const result = abilitySlotManager.slotActiveAbility(character, availableAbilities[0].key, slotIndex);
+            const message = result.success 
+                ? `Slotted ${availableAbilities[0].name} in slot ${slotIndex + 1}`
+                : `Failed to slot ability: ${result.reason}`;
+            
+            addLog(message, 'system');
+            if (result.success) updateAllDisplays();
+        }
+
+        function updateMapDisplay() {
+            let mapContent = '';
+            
+            // Check if we're in an active dungeon run
+            if (gameState.currentRun.active) {
+                mapContent = renderDungeonRoom();
+            } else {
+                // Default exploration view when not in dungeon
+                const { playerX: x, playerY: y } = gameState.location;
+                mapContent = `Position: (${x}, ${y})\n\n`;
+                
+                for (let row = y - 10; row <= y + 10; row++) {
+                    let line = '';
+                    for (let col = x - 20; col <= x + 20; col++) {
+                        line += (col === x && row === y) ? '@' : 
+                                (Math.abs(col - x) + Math.abs(row - y) < 5) ? '.' : '#';
+                    }
+                    mapContent += line + '\n';
+                }
+            }
+            
+            document.getElementById('map-display').textContent = mapContent;
+            
+            // Update map legend
+            updateMapLegend(mapContent);
+        }
+
+        function renderDungeonRoom() {
+            // Get current room from dungeon generator
+            const currentRoom = gameState.currentRun.floor || 1;
+            const template = dungeonGenerator.getCurrentTemplate(currentRoom);
+            
+            if (!template) {
+                return 'Error: Could not load room template\n';
+            }
+
+            // Generate enemies for this room if not already done
+            try {
+                dungeonGenerator.generateRoomEnemies(gameState);
+                console.log('Enemy generation attempt completed');
+            } catch (error) {
+                console.warn('Could not generate enemies:', error);
+            }
+
+            // Create map display
+            let mapContent = `Floor ${gameState.currentRun.floor} - Room ${currentRoom}\n\n`;
+            
+            // Build the room layout
+            const width = template.width;
+            const height = template.height;
+            
+            // Initialize room with floors
+            const roomMap = [];
+            for (let y = 0; y < height; y++) {
+                roomMap[y] = new Array(width).fill('.');
+            }
+            
+            // Place walls
+            if (template.walls) {
+                template.walls.forEach(([x, y]) => {
+                    if (y >= 0 && y < height && x >= 0 && x < width) {
+                        roomMap[y][x] = '#';
+                    }
+                });
+            }
+            
+            // Place objects (chests, doors, etc.) - SECOND layer
+            if (template.objects) {
+                template.objects.forEach(obj => {
+                    if (obj.x >= 0 && obj.x < width && obj.y >= 0 && obj.y < height) {
+                        let symbol = '&'; // default chest symbol
+                        switch (obj.type) {
+                            case 'chest': symbol = '&'; break;
+                            case 'door': symbol = '+'; break;
+                            case 'container': symbol = '{'; break;
+                            default: symbol = '?'; break;
+                        }
+                        // Only place if not a wall
+                        if (roomMap[obj.y][obj.x] !== '#') {
+                            roomMap[obj.y][obj.x] = symbol;
+                        }
+                    }
+                });
+            }
+            
+            // Place enemies - THIRD layer (above objects, below player)
+            const enemies = gameState.getCurrentEnemies ? gameState.getCurrentEnemies() : new Map();
+            console.log(`Found ${enemies.size} enemies for room:`, enemies);
+            enemies.forEach((enemy, id) => {
+                console.log(`Placing enemy ${enemy.name} at (${enemy.x}, ${enemy.y})`);
+                if (enemy.alive && enemy.x >= 0 && enemy.x < width && enemy.y >= 0 && enemy.y < height) {
+                    // Only place enemy if it's not a wall
+                    if (roomMap[enemy.y][enemy.x] !== '#') {
+                        // Use first letter of enemy name as symbol
+                        const enemySymbol = enemy.name ? enemy.name.charAt(0).toLowerCase() : 'e';
+                        roomMap[enemy.y][enemy.x] = enemySymbol;
+                        console.log(`Placed enemy symbol '${enemySymbol}' at (${enemy.x}, ${enemy.y})`);
+                    } else {
+                        console.log(`Enemy ${enemy.name} position blocked by wall`);
+                    }
+                } else {
+                    console.log(`Enemy ${enemy.name} has invalid position or is dead`);
+                }
+            });
+            
+            // Place player character LAST (top layer - always visible)
+            let playerX = gameState.location.playerX;
+            let playerY = gameState.location.playerY;
+            
+            // If player position is not set or invalid, find a suitable starting position
+            if (playerX == null || playerY == null || 
+                playerX < 0 || playerX >= width || playerY < 0 || playerY >= height ||
+                roomMap[playerY] && roomMap[playerY][playerX] === '#') {
+                
+                // Find first open floor space (avoid walls)
+                let found = false;
+                for (let y = 1; y < height - 1 && !found; y++) {
+                    for (let x = 1; x < width - 1 && !found; x++) {
+                        if (roomMap[y][x] === '.') {
+                            playerX = x;
+                            playerY = y;
+                            // Update game state with new position
+                            gameState.location.playerX = x;
+                            gameState.location.playerY = y;
+                            found = true;
+                        }
+                    }
+                }
+            }
+            
+            if (playerY >= 0 && playerY < height && playerX >= 0 && playerX < width) {
+                // Player overwrites anything else on their tile
+                roomMap[playerY][playerX] = '@';
+            }
+            
+            // Convert to string
+            for (let y = 0; y < height; y++) {
+                mapContent += roomMap[y].join('') + '\n';
+            }
+            
+            return mapContent;
+        }
+
+        function updateMapLegend(mapContent) {
+            // Only update legend in dungeon state
+            if (currentUIState === 'dungeon') {
+                mapSymbolTracker.scanMapContent(mapContent);
+                const visibleSymbols = mapSymbolTracker.getVisibleSymbols();
+                legendRenderer.render(visibleSymbols);
+            }
+        }
+
+        function updateWorldMapLegend(mapData) {
+            // Only update legend in world map state
+            if (currentUIState === 'world-map') {
+                // Convert mapData array to string format for scanning
+                let mapContent = '';
+                mapData.forEach(row => {
+                    mapContent += row.join('') + '\n';
+                });
+                
+                mapSymbolTracker.scanMapContent(mapContent);
+                const visibleSymbols = mapSymbolTracker.getVisibleSymbols();
+                legendRenderer.render(visibleSymbols);
+            }
         }
 
         function updateGuildInterface() {
@@ -697,36 +1964,33 @@
             container.innerHTML = '';
             
             gameState.guild.storedCharacters.forEach((character, id) => {
-                const characterDiv = document.createElement('div');
-                characterDiv.style.cssText = 'border: 1px solid #333; padding: 3px; margin: 2px; cursor: pointer;';
-                characterDiv.innerHTML = `
-                    <div>${character.name} (Level ${character.level})</div>
-                    <div style="font-size: 9px;">${skillSystem.getMasteryLevel(character)}</div>
-                `;
-                characterDiv.onclick = () => addToParty(id);
-                container.appendChild(characterDiv);
+                const div = document.createElement('div');
+                div.style.cssText = 'border: 1px solid #333; padding: 3px; margin: 2px; cursor: pointer;';
+                div.innerHTML = `<div>${character.name} (Level ${character.level})</div><div style="font-size: 9px;">${skillSystem.getMasteryLevel(character)}</div>`;
+                div.onclick = () => addToParty(id);
+                container.appendChild(div);
             });
         }
 
         function updateGuildPartyDisplay() {
             const container = document.getElementById('guild-party-display');
-            const partyMembers = Array.from(gameState.party.members.values());
-            
             container.innerHTML = '';
-            partyMembers.forEach((character) => {
-                const characterDiv = document.createElement('div');
-                characterDiv.style.cssText = 'border: 1px solid #0f0; padding: 3px; margin: 2px; background: #001100;';
-                characterDiv.innerHTML = `
-                    <div>${character.name}</div>
-                    <div style="font-size: 9px;">HP: ${character.health}/${character.maxHealth}</div>
-                `;
-                container.appendChild(characterDiv);
+            
+            Array.from(gameState.party.members.values()).forEach((character) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'border: 1px solid #0f0; padding: 3px; margin: 2px; background: #001100;';
+                div.innerHTML = `<div>${character.name}</div><div style="font-size: 9px;">HP: ${character.health}/${character.maxHealth}</div>`;
+                container.appendChild(div);
             });
         }
 
         function addToParty(characterId) {
             const character = gameState.guild.storedCharacters.get(characterId);
             if (!character) return;
+            
+            if (!character.abilitySlots) {
+                initializeCharacterAbilities(character);
+            }
             
             const result = gameState.addPartyMember(character);
             if (result.success) {
@@ -737,11 +2001,17 @@
             }
         }
 
-        function updateQuickStats() {
-            document.getElementById('runs-completed').textContent = gameState.playerProgress.runsCompleted;
-            document.getElementById('deepest-floor').textContent = gameState.playerProgress.deepestFloor;
-            document.getElementById('characters-lost').textContent = gameState.playerProgress.totalCharactersLost;
-        }
+        const updateQuickStats = () => {
+            const stats = gameState.playerProgress;
+            const elements = {
+                'runs-completed': stats.runsCompleted,
+                'deepest-floor': stats.deepestFloor,
+                'characters-lost': stats.totalCharactersLost
+            };
+            Object.entries(elements).forEach(([id, value]) => {
+                document.getElementById(id).textContent = value;
+            });
+        };
 
         function addLog(message, type = 'system') {
             const log = document.getElementById('adventure-log');
@@ -750,6 +2020,96 @@
             entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
             log.appendChild(entry);
             log.scrollTop = log.scrollHeight;
+        }
+
+        // UI State Management System
+        let currentUIState = 'guild';  // Start at guild base instead of dungeon
+        
+        function switchUIState(newState) {
+            // Hide current state
+            document.querySelectorAll('.ui-state').forEach(el => el.classList.remove('active'));
+            
+            // Show new state
+            const newStateEl = document.getElementById(newState + '-state');
+            if (newStateEl) {
+                newStateEl.classList.add('active');
+                currentUIState = newState;
+                
+                // Update specific state content and legends
+                if (newState === 'world-map') {
+                    renderWorldMap();
+                } else if (newState === 'guild') {
+                    updateGuildInterface();
+                    // Clear legend in guild state
+                    document.getElementById('map-legend').innerHTML = '<div style="color: #888; font-size: 10px;">No map active</div>';
+                } else if (newState === 'character-creation') {
+                    // Character creation state is now in the center panel
+                    // The CharacterGenerator will handle the interface setup
+                    // Clear legend in character creation state
+                    document.getElementById('map-legend').innerHTML = '<div style="color: #888; font-size: 10px;">No map active</div>';
+                } else if (newState === 'dungeon') {
+                    // Update map and legend for dungeon state
+                    updateMapDisplay();
+                }
+                
+                addLog(`Switched to ${newState} view`, 'system');
+            }
+        }
+        
+        function switchToDungeonState() {
+            switchUIState('dungeon');
+            updateMapDisplay();
+        }
+        
+        function switchToGuildState() {
+            switchUIState('guild');
+        }
+        
+        function switchToWorldMapState() {
+            if (gameState.party.members.size === 0) {
+                addLog('You need at least one party member to explore the world!', 'system');
+                return;
+            }
+            switchUIState('world-map');
+        }
+        
+        function switchToCharacterCreationState() {
+            switchUIState('character-creation');
+        }
+        
+        function initializeCharacterCreationInterface() {
+            const content = document.getElementById('character-creation-content');
+            content.innerHTML = `
+                <h2>Character Creation</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100% - 60px);">
+                    <div>
+                        <h3>Basic Information</h3>
+                        <label>Character Name:</label>
+                        <input type="text" id="char-name-input" placeholder="Enter character name" style="width: 100%; margin: 10px 0;">
+                        
+                        <h3>Quick Options</h3>
+                        <button class="control-button" onclick="createFullRandomCharacter()" style="width: 100%; margin: 5px 0;">Generate Random Character</button>
+                        <button class="control-button" onclick="showCustomCreation()" style="width: 100%; margin: 5px 0;">Custom Character</button>
+                        
+                        <div id="custom-creation" style="display: none;">
+                            <h4>Skill Allocation (25 points)</h4>
+                            <div id="skill-allocation" style="height: 200px; overflow-y: auto; border: 1px solid #333; padding: 5px;">
+                                <!-- Skill allocation will go here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Character Preview</h3>
+                        <div id="character-preview" style="height: 300px; border: 1px solid #333; padding: 10px; overflow-y: auto;">
+                            <p>Enter a name and choose creation method to preview your character.</p>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <button class="control-button" onclick="finalizeCharacterCreation()">Create Character</button>
+                            <button class="control-button" onclick="switchToGuildState()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         // Initialize game when page loads

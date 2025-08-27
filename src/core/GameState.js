@@ -23,6 +23,10 @@ class GameState {
       seed: null // for consistent generation
     };
 
+    // Current room tracking
+    this.currentRoom = 1;
+    this.currentRoomId = null;
+
     // Current location state
     this.location = {
       type: 'guild', // 'guild', 'overworld', 'combat'
@@ -69,7 +73,7 @@ class GameState {
     // Game settings
     this.settings = {
       autoSave: true,
-      difficulty: 'normal',
+      difficulty: 'normal', // 'easy', 'normal', 'hard', 'nightmare'
       permadeathEnabled: true,
       cloudSaveEnabled: true
     };
@@ -113,6 +117,10 @@ class GameState {
       roomChoices: [],
       seed: Date.now() // Simple seed for now
     };
+
+    // Initialize room tracking
+    this.currentRoom = 1;
+    this.currentRoomId = `floor_1_room_1`;
 
     this.location = {
       type: 'overworld',
@@ -310,6 +318,24 @@ class GameState {
         charactersUnlocked: Array.from(this.playerProgress.charactersUnlocked)
       },
       settings: this.settings,
+      lockpicking: this.lockpicking ? {
+        objectStates: Object.fromEntries(this.lockpicking.objectStates),
+        roomObjects: Object.fromEntries(
+          Array.from(this.lockpicking.roomObjects.entries()).map(([roomId, objects]) => [
+            roomId, 
+            Object.fromEntries(objects)
+          ])
+        ),
+        roomTraps: Object.fromEntries(
+          Array.from(this.lockpicking.roomTraps.entries()).map(([roomId, traps]) => [
+            roomId,
+            Object.fromEntries(traps)
+          ])
+        ),
+        keysFound: Array.from(this.lockpicking.keysFound),
+        picklocksBroken: this.lockpicking.picklocksBroken,
+        totalUnlocked: this.lockpicking.totalUnlocked
+      } : null,
       lastSaved: Date.now()
     };
   }
@@ -340,6 +366,50 @@ class GameState {
     };
 
     this.settings = data.settings;
+
+    // Restore lockpicking state
+    if (data.lockpicking) {
+      this.lockpicking = {
+        objectStates: new Map(Object.entries(data.lockpicking.objectStates)),
+        roomObjects: new Map(
+          Object.entries(data.lockpicking.roomObjects).map(([roomId, objects]) => [
+            roomId,
+            new Map(Object.entries(objects))
+          ])
+        ),
+        roomTraps: new Map(
+          Object.entries(data.lockpicking.roomTraps).map(([roomId, traps]) => [
+            roomId,
+            new Map(Object.entries(traps))
+          ])
+        ),
+        keysFound: new Set(data.lockpicking.keysFound),
+        picklocksBroken: data.lockpicking.picklocksBroken,
+        totalUnlocked: data.lockpicking.totalUnlocked
+      };
+    }
+  }
+
+  // Enemy and room management for dungeons
+  setRoomEnemies(roomId, enemies) {
+    if (!this.combat.enemies) {
+      this.combat.enemies = new Map();
+    }
+    this.combat.enemies = enemies;
+    this.currentRoomId = roomId;
+  }
+
+  getCurrentEnemies() {
+    return this.combat.enemies || new Map();
+  }
+
+  getCurrentRoomId() {
+    return this.currentRoomId || `floor_${this.currentRun.floor}_room_1`;
+  }
+
+  addCombatLog(message) {
+    // Simple logging for now - could be expanded
+    console.log(`[Combat] ${message}`);
   }
 }
 

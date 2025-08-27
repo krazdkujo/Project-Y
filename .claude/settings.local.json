@@ -75,9 +75,12 @@
       "Bash(start test-new-systems.html)",
       "Bash(start single-player-ascii-game.html)",
       "Bash(git remote set-url:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(move \"C:\\Dev\\New Test\\src\\skills\\SkillCategories.js\" \"C:\\Dev\\New Test\\src\\character\\skills\"\")",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "outputStyle": "Explanatory"
 }

@@ -3,13 +3,8 @@
  * Handles skill leveling, XP calculation, and use-based advancement
  */
 
-// Browser/Node compatibility
-let SKILL_CATEGORIES;
-if (typeof require !== 'undefined') {
-  SKILL_CATEGORIES = require('./SkillCategories').SKILL_CATEGORIES;
-} else {
-  SKILL_CATEGORIES = window.SKILL_CATEGORIES;
-}
+// Browser/Node compatibility - use already loaded SKILL_CATEGORIES
+// Note: SKILL_CATEGORIES is loaded from SkillCategories.js script tag
 
 class SkillSystem {
   constructor(eventSystem) {
@@ -17,25 +12,34 @@ class SkillSystem {
     
     // XP requirements for each level (exponential growth)
     this.xpRequirements = this.generateXPRequirements();
-    
-    // Skill use multipliers based on difficulty/context
-    this.useMultipliers = {
-      trivial: 0.1,    // Much easier than skill level
-      easy: 0.5,       // Somewhat easier
-      normal: 1.0,     // At skill level
-      hard: 1.5,       // Somewhat harder
-      very_hard: 2.0,  // Much harder
-      legendary: 3.0   // Extremely challenging
-    };
   }
 
   // Generate XP requirements for levels 1-100
   generateXPRequirements() {
     const requirements = [0]; // Level 0 (no XP needed)
     
+    // Since we gain 1 XP per use, let's make progression more reasonable
+    // Early levels: quick progression (10-20 uses)
+    // Mid levels: moderate progression (50-100 uses)  
+    // High levels: slow progression (200+ uses)
+    
     for (let level = 1; level <= 100; level++) {
-      // Exponential growth: base 100 * level^1.8
-      const xpNeeded = Math.floor(100 * Math.pow(level, 1.8));
+      let xpNeeded;
+      
+      if (level <= 10) {
+        // Levels 1-10: 10 + (level * 2) uses per level
+        xpNeeded = 10 + (level * 2);
+      } else if (level <= 30) {
+        // Levels 11-30: 30 + (level - 10) * 5 uses per level
+        xpNeeded = 30 + ((level - 10) * 5);
+      } else if (level <= 60) {
+        // Levels 31-60: 100 + (level - 30) * 10 uses per level
+        xpNeeded = 100 + ((level - 30) * 10);
+      } else {
+        // Levels 61-100: 200 + (level - 60) * 20 uses per level
+        xpNeeded = 200 + ((level - 60) * 20);
+      }
+      
       requirements[level] = requirements[level - 1] + xpNeeded;
     }
     
@@ -61,19 +65,17 @@ class SkillSystem {
     return skills;
   }
 
-  // Award XP for skill use
-  awardSkillUse(character, skillKey, difficulty = 'normal', baseXP = 10) {
+  // Award XP for skill use - 1 XP per use, no matter what
+  awardSkillUse(character, skillKey) {
     if (!character.skills[skillKey]) {
       console.warn(`Skill ${skillKey} not found on character ${character.id}`);
       return false;
     }
 
     const skill = character.skills[skillKey];
-    const multiplier = this.useMultipliers[difficulty] || 1.0;
     
-    // Calculate XP gain with diminishing returns for easy tasks
-    const levelDifference = this.calculateDifficultyLevel(difficulty) - skill.level;
-    const xpGain = Math.max(1, Math.floor(baseXP * multiplier * this.getDiminishingReturns(levelDifference)));
+    // Always award exactly 1 XP per use
+    const xpGain = 1;
     
     // Award XP
     skill.xp += xpGain;
@@ -102,7 +104,7 @@ class SkillSystem {
       success: true,
       xpGained: xpGain,
       newLevel: skill.level,
-      levelUp: newLevel > (skill.level || 0)
+      levelUp: newLevel > skill.level
     };
   }
 
@@ -126,28 +128,6 @@ class SkillSystem {
     return this.xpRequirements[currentLevel + 1] - currentXP;
   }
 
-  // Get diminishing returns multiplier based on difficulty vs skill level
-  getDiminishingReturns(levelDifference) {
-    if (levelDifference > 10) return 1.0;    // Much harder - full XP
-    if (levelDifference > 5) return 0.8;     // Somewhat harder - reduced XP
-    if (levelDifference > 0) return 0.6;     // At level - some XP
-    if (levelDifference > -10) return 0.3;   // Easier - minimal XP
-    return 0.1;                              // Much easier - tiny XP
-  }
-
-  // Convert difficulty string to approximate level
-  calculateDifficultyLevel(difficulty) {
-    const difficultyLevels = {
-      trivial: 1,
-      easy: 10,
-      normal: 25,
-      hard: 50,
-      very_hard: 75,
-      legendary: 100
-    };
-    
-    return difficultyLevels[difficulty] || 25;
-  }
 
   // Get skill bonus based on level (0-100 = 0% to 500% bonus)
   getSkillBonus(skillLevel) {

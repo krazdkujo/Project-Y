@@ -4,9 +4,11 @@
  */
 
 class DungeonGenerator {
-  constructor(gameEvents) {
+  constructor(gameEvents, enemySystem) {
     this.events = gameEvents;
+    this.enemySystem = enemySystem;
     this.enemyIdCounter = 1;
+    this.objectIdCounter = 1;
     
     this.roomTemplates = [
       // Large open chamber
@@ -29,7 +31,12 @@ class DungeonGenerator {
           {x: 3, y: 3}, {x: 21, y: 3}, {x: 12, y: 10}, 
           {x: 6, y: 16}, {x: 18, y: 16}, {x: 12, y: 5}
         ],
-        exits: [{x: 23, y: 10, type: 'east'}]
+        exits: [{x: 23, y: 10, type: 'east'}],
+        objects: [
+          {x: 2, y: 2, type: 'chest', id: 'wooden_chest', locked: true},
+          {x: 22, y: 2, type: 'container', id: 'supply_crate', locked: true},
+          {x: 12, y: 18, type: 'chest', id: 'iron_chest', locked: true}
+        ]
       },
       
       // Pillared hall
@@ -57,7 +64,12 @@ class DungeonGenerator {
           {x: 4, y: 4}, {x: 24, y: 4}, {x: 4, y: 13}, 
           {x: 24, y: 13}, {x: 14, y: 8}, {x: 10, y: 9}, {x: 18, y: 9}
         ],
-        exits: [{x: 26, y: 9, type: 'east'}]
+        exits: [{x: 26, y: 9, type: 'east'}],
+        objects: [
+          {x: 2, y: 2, type: 'chest', id: 'treasure_chest', locked: true, trapped: true},
+          {x: 25, y: 2, type: 'container', id: 'lockbox', locked: true},
+          {x: 6, y: 8, type: 'door', id: 'reinforced_door', locked: true, blocksMovement: true}
+        ]
       },
 
       // Maze-like chamber
@@ -96,7 +108,13 @@ class DungeonGenerator {
           {x: 15, y: 8}, {x: 3, y: 18}, {x: 22, y: 18},
           {x: 12, y: 12}, {x: 6, y: 16}
         ],
-        exits: [{x: 24, y: 11, type: 'east'}]
+        exits: [{x: 24, y: 11, type: 'east'}],
+        objects: [
+          {x: 1, y: 1, type: 'chest', id: 'wooden_chest', locked: true},
+          {x: 23, y: 1, type: 'container', id: 'supply_crate', locked: false}, // Already opened
+          {x: 2, y: 8, type: 'door', id: 'secret_door', locked: true, hidden: true},
+          {x: 21, y: 20, type: 'chest', id: 'iron_chest', locked: true}
+        ]
       },
 
       // Grand circular chamber
@@ -138,7 +156,12 @@ class DungeonGenerator {
           {x: 6, y: 6}, {x: 17, y: 6}, {x: 6, y: 17}, {x: 17, y: 17},
           {x: 12, y: 4}, {x: 12, y: 19}, {x: 4, y: 12}, {x: 19, y: 12}
         ],
-        exits: [{x: 22, y: 12, type: 'east'}]
+        exits: [{x: 22, y: 12, type: 'east'}],
+        objects: [
+          {x: 12, y: 13, type: 'chest', id: 'master_chest', locked: true, trapped: true}, // Center chest
+          {x: 3, y: 3, type: 'door', id: 'vault_door', locked: true},
+          {x: 20, y: 20, type: 'container', id: 'lockbox', locked: true}
+        ]
       }
     ];
   }
@@ -168,71 +191,187 @@ class DungeonGenerator {
     return this.roomTemplates[index];
   }
 
-  generateRoomEnemies(gameState, enemyTypes) {
+  generateRoomEnemies(gameState) {
     const roomId = gameState.getCurrentRoomId();
     const template = this.getCurrentTemplate(gameState.currentRoom);
     const floor = gameState.currentFloor;
+    const difficulty = gameState.settings?.difficulty || 'normal';
+    
+    // Generate room objects if they haven't been generated yet
+    this.generateRoomObjects(gameState, template, roomId, floor);
     
     // Clear existing enemies
     if (gameState.roomEnemies.has(roomId)) {
       return gameState.getCurrentEnemies(); // Room already generated
     }
     
+    // Use EnemySystem to generate appropriate enemies for this floor/difficulty
+    let encounterType = 'normal';
+    if (floor === 5) {
+      encounterType = 'boss';
+    } else if (Math.random() < 0.1) {
+      encounterType = Math.random() < 0.5 ? 'solo' : 'horde';
+    }
+    
+    const enemyGroup = this.enemySystem.generateEnemyGroup(floor, difficulty, encounterType);
     const enemies = new Map();
-    const numEnemies = Math.min(template.spawns.length, 2 + Math.floor(floor / 2));
     
-    // Select enemy types (harder enemies on deeper floors)
-    const availableTypes = Object.keys(enemyTypes).filter(type => {
-      if (type === 'troll') return floor >= 3;
-      if (type === 'skeleton') return floor >= 2;
-      return true;
-    });
+    // Position enemies at spawn points
+    const maxEnemies = Math.min(enemyGroup.length, template.spawns.length);
     
-    for (let i = 0; i < numEnemies; i++) {
-      const enemyId = `e${this.enemyIdCounter++}`;
+    for (let i = 0; i < maxEnemies; i++) {
+      const enemy = enemyGroup[i];
       const spawn = template.spawns[i];
-      const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-      const stats = this.getEnemyStats(enemyTypes[type], floor);
       
-      enemies.set(enemyId, {
-        id: enemyId,
-        type: type,
-        x: spawn.x,
-        y: spawn.y,
-        ...stats,
-        ap: 3,
-        maxAP: 3,
-        alive: true
-      });
+      // Update enemy position to spawn location
+      enemy.x = spawn.x;
+      enemy.y = spawn.y;
+      
+      // Ensure enemy has required combat properties
+      enemy.ap = enemy.ap || 3;
+      enemy.maxAP = enemy.maxAP || 3;
+      enemy.alive = true;
+      
+      enemies.set(enemy.id, enemy);
     }
     
     gameState.setRoomEnemies(roomId, enemies);
-    gameState.addCombatLog(`Generated ${numEnemies} enemies for ${roomId}`);
+    gameState.addCombatLog(`Generated ${enemies.size} enemies for ${roomId} (${difficulty} difficulty, tier ${floor})`);
     
     // Emit event
     this.events.emit('room:generated', {
       roomId,
       enemies: Array.from(enemies.keys()),
-      numEnemies
+      numEnemies: enemies.size,
+      difficulty,
+      floor
     });
     
     return enemies;
   }
 
-  getEnemyStats(baseEnemy, floor) {
-    const multiplier = 1 + (floor - 1) * 0.3; // 30% stronger per floor
-    
-    return {
-      health: Math.floor(baseEnemy.baseHealth * multiplier),
-      maxHealth: Math.floor(baseEnemy.baseHealth * multiplier),
-      damage: [
-        Math.floor(baseEnemy.baseDamage[0] * multiplier),
-        Math.floor(baseEnemy.baseDamage[1] * multiplier)
-      ],
-      initiative: baseEnemy.initiative + Math.floor((floor - 1) * 2),
-      symbol: baseEnemy.symbol,
-      ai: baseEnemy.ai
+  generateRoomObjects(gameState, template, roomId, floor) {
+    // Initialize lockpicking system data if not exists
+    if (!gameState.lockpicking) {
+      gameState.lockpicking = {
+        objectStates: new Map(),
+        roomObjects: new Map(),
+        roomTraps: new Map(),
+        keysFound: new Set(),
+        picklocksBroken: 0,
+        totalUnlocked: 0
+      };
+    }
+
+    // Check if objects already generated for this room
+    if (gameState.lockpicking.roomObjects.has(roomId)) {
+      return; // Objects already generated
+    }
+
+    if (!template.objects || template.objects.length === 0) {
+      return; // No objects in this template
+    }
+
+    const roomObjects = new Map();
+    const roomTraps = new Map();
+
+    template.objects.forEach(objTemplate => {
+      // Create unique object ID
+      const objectId = `${roomId}_${objTemplate.type}_${this.objectIdCounter++}`;
+      
+      // Create object instance from template
+      const object = {
+        id: objectId,
+        x: objTemplate.x,
+        y: objTemplate.y,
+        type: objTemplate.type,
+        templateId: objTemplate.id,
+        locked: objTemplate.locked !== false, // Default to locked
+        roomId: roomId,
+        floor: floor,
+        ...this.getObjectDefinition(objTemplate.id) // Merge with definition
+      };
+
+      // Adjust difficulty based on floor
+      if (object.lockDifficulty) {
+        object.lockDifficulty = Math.min(5, Math.max(1, 
+          object.lockDifficulty + Math.floor((floor - 1) / 2)
+        ));
+      }
+
+      roomObjects.set(objectId, object);
+
+      // Generate trap if object is trapped
+      if (objTemplate.trapped || object.trapped) {
+        const trapId = `${objectId}_trap`;
+        const trapType = this.selectTrapType(floor, object.lockDifficulty);
+        
+        const trap = {
+          id: trapId,
+          objectId: objectId,
+          ...this.getTrapDefinition(trapType),
+          complexity: Math.min(5, Math.max(1, 
+            (this.getTrapDefinition(trapType)?.complexity || 1) + Math.floor(floor / 2)
+          ))
+        };
+
+        roomTraps.set(trapId, trap);
+      }
+    });
+
+    // Store generated objects and traps
+    gameState.lockpicking.roomObjects.set(roomId, roomObjects);
+    gameState.lockpicking.roomTraps.set(roomId, roomTraps);
+
+    // Emit event for object generation
+    this.events.emit('room:objects_generated', {
+      roomId,
+      objectCount: roomObjects.size,
+      trapCount: roomTraps.size,
+      floor
+    });
+  }
+
+  getObjectDefinition(templateId) {
+    // This would import from LockableObjects.js in a real implementation
+    // For now, return basic definitions
+    const definitions = {
+      wooden_chest: { name: 'Wooden Chest', lockDifficulty: 1, durability: 80, lootTable: 'basic_treasure' },
+      iron_chest: { name: 'Iron Chest', lockDifficulty: 2, durability: 150, lootTable: 'good_treasure' },
+      treasure_chest: { name: 'Treasure Chest', lockDifficulty: 3, durability: 200, lootTable: 'rare_treasure' },
+      master_chest: { name: 'Master\'s Chest', lockDifficulty: 4, durability: 300, lootTable: 'legendary_treasure' },
+      supply_crate: { name: 'Supply Crate', lockDifficulty: 1, durability: 60, lootTable: 'supplies' },
+      lockbox: { name: 'Lockbox', lockDifficulty: 2, durability: 120, lootTable: 'valuables' },
+      wooden_door: { name: 'Wooden Door', lockDifficulty: 1, durability: 100, canBreakDown: true },
+      reinforced_door: { name: 'Reinforced Door', lockDifficulty: 2, durability: 200, canBreakDown: true },
+      secret_door: { name: 'Secret Door', lockDifficulty: 2, durability: 150, hidden: true },
+      vault_door: { name: 'Vault Door', lockDifficulty: 4, durability: 500, canBreakDown: false }
     };
+
+    return definitions[templateId] || { name: 'Unknown Object', lockDifficulty: 1 };
+  }
+
+  getTrapDefinition(trapType) {
+    const definitions = {
+      needle_trap: { name: 'Poison Needle Trap', complexity: 1, maxDamage: 8, damageType: 'poison' },
+      blade_trap: { name: 'Spring Blade Trap', complexity: 2, maxDamage: 15, damageType: 'slashing' },
+      gas_trap: { name: 'Toxic Gas Trap', complexity: 3, maxDamage: 12, damageType: 'poison' },
+      explosion_trap: { name: 'Explosive Trap', complexity: 4, maxDamage: 25, damageType: 'fire' },
+      alarm_trap: { name: 'Magical Alarm', complexity: 2, maxDamage: 0, damageType: 'none' }
+    };
+
+    return definitions[trapType] || definitions.needle_trap;
+  }
+
+  selectTrapType(floor, lockDifficulty) {
+    const trapTypes = ['needle_trap', 'blade_trap', 'gas_trap', 'explosion_trap', 'alarm_trap'];
+    const maxComplexity = Math.min(4, Math.max(1, lockDifficulty + Math.floor(floor / 2)));
+    
+    // Select trap type based on complexity
+    if (maxComplexity >= 4) return 'explosion_trap';
+    if (maxComplexity >= 3) return Math.random() < 0.5 ? 'gas_trap' : 'blade_trap';
+    if (maxComplexity >= 2) return Math.random() < 0.6 ? 'blade_trap' : 'alarm_trap';
+    return 'needle_trap';
   }
 
   isRoomCleared(gameState) {
@@ -286,4 +425,9 @@ class DungeonGenerator {
   }
 }
 
-module.exports = DungeonGenerator;
+// Browser compatibility
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = DungeonGenerator;
+} else {
+  window.DungeonGenerator = DungeonGenerator;
+}

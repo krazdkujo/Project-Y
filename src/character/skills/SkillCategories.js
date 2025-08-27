@@ -122,7 +122,6 @@ const SKILL_CATEGORIES = {
       strength: { name: 'Strength', description: 'Raw physical power' },
       flexibility: { name: 'Flexibility', description: 'Bending and stretching ability' },
       coordination: { name: 'Coordination', description: 'Body control and precision' },
-      stamina: { name: 'Stamina', description: 'Sustained physical activity' }
     }
   },
 

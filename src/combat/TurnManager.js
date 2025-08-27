@@ -1,47 +1,47 @@
 /**
- * Turn Management System
- * Handles turn order, initiative, and turn progression
+ * Party-Based Turn Management System
+ * Handles turn order, initiative, and turn progression for party vs enemies
  */
 
 class TurnManager {
-  constructor(gameState, gameEvents) {
+  constructor(gameState, eventSystem) {
     this.gameState = gameState;
-    this.events = gameEvents;
+    this.events = eventSystem;
     
     // Subscribe to events
-    this.events.on('combat:started', this.handleCombatStarted.bind(this));
-    this.events.on('player:killed', this.handleEntityKilled.bind(this));
-    this.events.on('enemy:killed', this.handleEntityKilled.bind(this));
+    this.events.on('COMBAT_STARTED', this.handleCombatStarted.bind(this));
+    this.events.on('CHARACTER_DIED', this.handleEntityKilled.bind(this));
+    this.events.on('ENEMY_KILLED', this.handleEntityKilled.bind(this));
   }
 
-  handleCombatStarted({ players, enemies }) {
-    this.initializeTurnOrder(players, enemies);
+  handleCombatStarted({ partyMembers, enemies }) {
+    this.initializeTurnOrder(partyMembers, enemies);
   }
 
-  handleEntityKilled({ playerId, enemyId }) {
-    const entityId = playerId || enemyId;
+  handleEntityKilled({ characterId, enemyId }) {
+    const entityId = characterId || enemyId;
     this.removeFromTurnOrder(entityId);
   }
 
   // Initialize turn order based on initiative
-  initializeTurnOrder(players, enemies) {
+  initializeTurnOrder(partyMembers, enemies) {
     const allEntities = [];
     
-    // Add players to initiative
-    players.forEach(player => {
-      if (player.alive) {
-        const initiative = this.rollInitiative(player);
+    // Add party members to initiative
+    partyMembers.forEach(character => {
+      if (character.health > 0) {
+        const initiative = this.rollInitiative(character);
         allEntities.push({
-          id: player.id,
+          id: character.id,
           initiative,
-          type: 'player'
+          type: 'party'
         });
       }
     });
 
     // Add enemies to initiative
     enemies.forEach(enemy => {
-      if (enemy.alive) {
+      if (enemy.health > 0) {
         const initiative = this.rollInitiative(enemy);
         allEntities.push({
           id: enemy.id,
@@ -54,8 +54,9 @@ class TurnManager {
     // Sort by initiative (highest first)
     allEntities.sort((a, b) => b.initiative - a.initiative);
     
-    // Set turn order in game state
-    this.gameState.setTurnOrder(allEntities);
+    // Set turn order in combat state
+    this.gameState.combat.turnOrder = allEntities;
+    this.gameState.combat.currentTurnIndex = 0;
     
     // Start first turn
     this.startCurrentTurn();
@@ -64,13 +65,20 @@ class TurnManager {
     const initiativeList = allEntities
       .map(entity => `${entity.id}(${entity.initiative})`)
       .join(', ');
-    this.gameState.addCombatLog(`Initiative order: ${initiativeList}`);
+    console.log(`[COMBAT] Initiative order: ${initiativeList}`);
+    
+    // Emit event
+    this.events.emit('TURN_ORDER_SET', { 
+      turnOrder: allEntities,
+      message: `Initiative order: ${initiativeList}`
+    });
   }
 
   rollInitiative(entity) {
     const baseRoll = Math.floor(Math.random() * 20) + 1; // d20
     const initiativeBonus = entity.initiative || 0;
-    const floorBonus = Math.floor((this.gameState.currentFloor - 1) * 2);
+    const floorBonus = this.gameState.currentRun.active ? 
+      Math.floor((this.gameState.currentRun.floor - 1) * 2) : 0;
     
     return baseRoll + initiativeBonus + floorBonus;
   }
@@ -82,34 +90,35 @@ class TurnManager {
     }
 
     // Reset AP for current entity
-    if (currentTurn.type === 'player') {
-      const player = this.gameState.getPlayer(currentTurn.id);
-      if (player && player.alive) {
-        player.ap = player.maxAP;
-        this.gameState.addCombatLog(`${currentTurn.id}'s turn begins (${player.ap} AP)`);
+    if (currentTurn.type === 'party') {
+      const character = this.gameState.party.members.get(currentTurn.id);
+      if (character && character.health > 0) {
+        character.ap = character.maxAP || 3; // Default 3 AP per turn
+        console.log(`[COMBAT] ${character.name || currentTurn.id}'s turn begins (${character.ap} AP)`);
         
         // Emit turn started event
-        this.events.emit('turn:started', {
+        this.events.emit('TURN_STARTED', {
           entityId: currentTurn.id,
-          entityType: 'player',
-          ap: player.ap
+          entityType: 'party',
+          character: character,
+          ap: character.ap
         });
       } else {
-        // Player dead, skip turn
+        // Character dead, skip turn
         return this.nextTurn();
       }
     } else if (currentTurn.type === 'enemy') {
-      const enemies = this.gameState.getCurrentEnemies();
-      const enemy = enemies.get(currentTurn.id);
+      const enemy = this.gameState.combat.enemies.get(currentTurn.id);
       
-      if (enemy && enemy.alive) {
-        enemy.ap = enemy.maxAP;
-        this.gameState.addCombatLog(`${currentTurn.id}'s turn begins`);
+      if (enemy && enemy.health > 0) {
+        enemy.ap = enemy.maxAP || 2; // Default 2 AP per turn for enemies
+        console.log(`[COMBAT] ${enemy.name || currentTurn.id}'s turn begins`);
         
         // Emit turn started event
-        this.events.emit('turn:started', {
+        this.events.emit('TURN_STARTED', {
           entityId: currentTurn.id,
           entityType: 'enemy',
+          enemy: enemy,
           ap: enemy.ap
         });
         
@@ -127,19 +136,20 @@ class TurnManager {
     
     // Emit turn ended event
     if (previousTurn) {
-      this.events.emit('turn:ended', {
+      this.events.emit('TURN_ENDED', {
         entityId: previousTurn.id,
         entityType: previousTurn.type
       });
     }
 
     // Check combat end conditions
-    const alivePlayers = this.gameState.getAlivePlayers().length;
-    const aliveEnemies = Array.from(this.gameState.getCurrentEnemies().values())
-      .filter(e => e.alive).length;
+    const alivePartyMembers = Array.from(this.gameState.party.members.values())
+      .filter(member => member.health > 0).length;
+    const aliveEnemies = Array.from(this.gameState.combat.enemies.values())
+      .filter(enemy => enemy.health > 0).length;
 
-    if (alivePlayers === 0) {
-      return this.endCombat('All players defeated');
+    if (alivePartyMembers === 0) {
+      return this.endCombat('All party members defeated');
     }
     
     if (aliveEnemies === 0) {
@@ -156,45 +166,46 @@ class TurnManager {
   }
 
   executeEnemyTurn(enemyId) {
-    const enemies = this.gameState.getCurrentEnemies();
-    const enemy = enemies.get(enemyId);
+    const enemy = this.gameState.combat.enemies.get(enemyId);
     
-    if (!enemy || !enemy.alive) {
+    if (!enemy || enemy.health <= 0) {
       return this.nextTurn();
     }
 
-    // Find closest living player
-    const alivePlayers = this.gameState.getAlivePlayers();
-    if (alivePlayers.length === 0) {
+    // Find closest living party member
+    const alivePartyMembers = Array.from(this.gameState.party.members.values())
+      .filter(member => member.health > 0);
+    
+    if (alivePartyMembers.length === 0) {
       return this.nextTurn();
     }
 
-    let closestPlayer = null;
+    let closestTarget = null;
     let closestDistance = Infinity;
 
-    alivePlayers.forEach(player => {
-      const distance = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
+    alivePartyMembers.forEach(character => {
+      const distance = Math.abs(enemy.x - character.x) + Math.abs(enemy.y - character.y);
       if (distance < closestDistance) {
         closestDistance = distance;
-        closestPlayer = player;
+        closestTarget = character;
       }
     });
 
     // Enemy AI behavior
     if (closestDistance <= 1 && enemy.ap >= 1) {
       // Attack if adjacent
-      this.executeEnemyAttack(enemy, closestPlayer);
+      this.executeEnemyAttack(enemy, closestTarget);
     } else if (enemy.ap >= 1) {
-      // Move towards player
-      this.executeEnemyMovement(enemy, closestPlayer);
+      // Move towards target
+      this.executeEnemyMovement(enemy, closestTarget);
     } else {
       // No AP left, end turn
-      this.gameState.addCombatLog(`${enemyId} has no AP remaining`);
+      console.log(`[COMBAT] ${enemyId} has no AP remaining`);
     }
 
     // Continue enemy actions or end turn
     setTimeout(() => {
-      if (enemy.ap > 0 && enemy.alive) {
+      if (enemy.ap > 0 && enemy.health > 0) {
         this.executeEnemyTurn(enemyId); // Continue turn
       } else {
         this.nextTurn(); // End turn
@@ -208,17 +219,22 @@ class TurnManager {
     target.health = Math.max(0, target.health - damage);
     enemy.ap -= 1;
 
-    const message = `${enemy.id} attacks ${target.id} for ${damage} damage!`;
-    this.gameState.addCombatLog(message);
+    const message = `${enemy.name || enemy.id} attacks ${target.name || target.id} for ${damage} damage!`;
+    console.log(`[COMBAT] ${message}`);
 
     // Emit attack event
-    this.events.emitSkillUsed(enemy.id, 'attack', target.id, damage, 0);
+    this.events.emit('DAMAGE_DEALT', {
+      attackerId: enemy.id,
+      targetId: target.id,
+      damage: damage,
+      attackerType: 'enemy',
+      targetType: 'party'
+    });
 
-    // Check if player died
+    // Check if character died
     if (target.health <= 0) {
-      target.alive = false;
-      this.gameState.addCombatLog(`${target.id} defeated!`);
-      this.events.emit('player:killed', { playerId: target.id, killer: enemy.id });
+      console.log(`[COMBAT] ${target.name || target.id} defeated!`);
+      this.events.emit('CHARACTER_DIED', { characterId: target.id, killer: enemy.id });
     }
   }
 
@@ -229,21 +245,22 @@ class TurnManager {
     const newX = enemy.x + (Math.abs(dx) > Math.abs(dy) ? dx : 0);
     const newY = enemy.y + (Math.abs(dx) <= Math.abs(dy) ? dy : 0);
 
-    // Check if position is valid
-    const template = this.gameState.getCurrentTemplate 
-      ? this.gameState.getCurrentTemplate(this.gameState.currentRoom) 
-      : null;
+    // Simple position validation (can be enhanced later)
+    const isValidPosition = (x, y) => {
+      // Basic bounds checking - assuming combat area is 20x20
+      return x >= 0 && x < 20 && y >= 0 && y < 20;
+    };
 
-    if (this.gameState.isValidPosition(newX, newY, template)) {
+    if (isValidPosition(newX, newY)) {
       const oldPos = { x: enemy.x, y: enemy.y };
       enemy.x = newX;
       enemy.y = newY;
       enemy.ap -= 1;
 
-      this.gameState.addCombatLog(`${enemy.id} moves to (${newX},${newY})`);
+      console.log(`[COMBAT] ${enemy.name || enemy.id} moves to (${newX},${newY})`);
       
       // Emit movement event
-      this.events.emit('enemy:moved', {
+      this.events.emit('ENEMY_MOVED', {
         enemyId: enemy.id,
         oldPosition: oldPos,
         newPosition: { x: newX, y: newY }
@@ -255,35 +272,39 @@ class TurnManager {
   }
 
   endCombat(reason) {
-    this.gameState.setPhase('exploration');
-    this.gameState.setTurnOrder([]);
-    this.gameState.addCombatLog(`Combat ended: ${reason}`);
+    // Reset combat state
+    this.gameState.combat.active = false;
+    this.gameState.combat.turnOrder = [];
+    this.gameState.combat.currentTurnIndex = 0;
+    this.gameState.location.type = 'overworld';
+    
+    console.log(`[COMBAT] Combat ended: ${reason}`);
 
     // Emit combat ended event
-    this.events.emit('combat:ended', { reason });
+    this.events.emit('COMBAT_ENDED', { reason });
   }
 
   removeFromTurnOrder(entityId) {
-    const currentOrder = this.gameState.turnOrder;
+    const currentOrder = this.gameState.combat.turnOrder;
     const newOrder = currentOrder.filter(turn => turn.id !== entityId);
     
     // Adjust current turn index if needed
-    if (this.gameState.currentTurnIndex >= newOrder.length) {
-      this.gameState.currentTurnIndex = 0;
+    if (this.gameState.combat.currentTurnIndex >= newOrder.length) {
+      this.gameState.combat.currentTurnIndex = 0;
     }
     
-    this.gameState.turnOrder = newOrder;
+    this.gameState.combat.turnOrder = newOrder;
   }
 
   // Force end current turn
-  endTurn(playerId) {
+  endTurn(characterId) {
     const currentTurn = this.gameState.getCurrentTurn();
     
-    if (!currentTurn || currentTurn.id !== playerId || currentTurn.type !== 'player') {
+    if (!currentTurn || currentTurn.id !== characterId) {
       return { success: false, reason: 'Not your turn' };
     }
 
-    this.gameState.addCombatLog(`${playerId} ends their turn`);
+    console.log(`[COMBAT] ${characterId} ends their turn`);
     this.nextTurn();
     
     return { success: true, message: 'Turn ended' };
@@ -292,10 +313,15 @@ class TurnManager {
   getCurrentTurnInfo() {
     return {
       currentTurn: this.gameState.getCurrentTurn(),
-      turnOrder: this.gameState.turnOrder,
-      gamePhase: this.gameState.gamePhase
+      turnOrder: this.gameState.combat.turnOrder,
+      gamePhase: this.gameState.location.type
     };
   }
 }
 
-module.exports = TurnManager;
+// Browser compatibility
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = TurnManager;
+} else {
+  window.TurnManager = TurnManager;
+}

@@ -107,9 +107,13 @@ const EVENTS = {
 };
 
 // Browser compatibility
+// Browser compatibility (existing pattern)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { EventSystem, EVENTS };
 } else {
   window.EventSystem = EventSystem;
   window.EVENTS = EVENTS;
 }
+
+// ES6 module exports
+export { EventSystem, EVENTS };

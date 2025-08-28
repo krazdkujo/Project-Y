@@ -1,7 +1,7 @@
 # Folder Context: abilities
 
 ## Purpose
-Core abilities system implementing the 9+5 slotting model (9 active, 5 passive slots) for the tactical ASCII roguelike. This system manages 385+ abilities across combat, magic, exploration, passive, and hybrid categories with shared implementation for both players and enemies.
+Core abilities system implementing the 9+5 slotting model (9 active, 5 passive slots) for the single-player party-based ASCII roguelike. This system manages 385+ abilities across combat, magic, exploration, passive, and hybrid categories with shared implementation for both players and enemies. Fully integrated with the Vite build system and modular architecture.
 
 ## Key Files
 
@@ -106,5 +106,11 @@ Base rate + skill bonuses + equipment modifiers, with critical success/failure t
 - Cooldown tracking per entity
 - Resource costs (future: mana, reagents for crafting)
 
+## Vite Architecture Integration
+**Module Loading**: All ability modules loaded through main.js in proper dependency order
+**Chunk Splitting**: Abilities system included in game-systems chunk for optimized loading
+**Hot Module Replacement**: Development-time updates without full page reload
+**Build Optimization**: Minified and bundled for production deployment
+
 ## Last Updated
-2025-08-27 - Updated to reflect Phase 1 lockpicking system completion with 5 functional exploration abilities
+2025-08-27 - Updated to reflect Vite modular architecture transition and Phase 1 lockpicking system completion with 5 functional exploration abilities

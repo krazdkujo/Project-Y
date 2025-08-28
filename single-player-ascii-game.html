@@ -553,7 +553,7 @@
                         <div>
                             <h3>Create New Character</h3>
                             <div style="display: flex; gap: 5px;">
-                                <button class="control-button" onclick="createRandomCharacter()">Quick Random</button>
+                                <button class="control-button" onclick="window.gameManager.createRandomCharacter()">Quick Random</button>
                                 <button class="control-button" onclick="createNewCharacter()">Custom Creation</button>
                             </div>
                             <p style="font-size: 10px; color: #888; margin-top: 5px;">Quick Random creates a character instantly. Custom Creation opens the full character builder.</p>
@@ -710,6 +710,27 @@
     <script src="src/combat/CombatManager.js"></script>
     <script src="src/combat/TurnManager.js"></script>
     <script src="src/dungeon/DungeonGenerator.js"></script>
+    
+    <!-- Input System -->
+    <script src="src/input/core/InputManager.js"></script>
+    <script src="src/input/handlers/AbilityHandler.js"></script>
+    
+    <!-- UI System -->
+    <script src="src/ui/core/UIManager.js"></script>
+    <script src="src/ui/panels/LeftPanel.js"></script>
+    
+    <!-- Movement System -->
+    <script src="src/movement/core/MovementSystem.js"></script>
+    <script src="src/movement/validation/MovementValidator.js"></script>
+    <script src="src/movement/ai/EnemyAI.js"></script>
+    
+    <!-- Encounters System -->
+    <script src="src/encounters/core/EncounterManager.js"></script>
+    <script src="src/encounters/scaling/EncounterScaling.js"></script>
+    <script src="src/encounters/combat/TacticalCombat.js"></script>
+    
+    <!-- Game Management System -->
+    <script src="src/game/core/GameManager.js"></script>
 
     <script>
         // Initialize game systems
@@ -895,12 +916,27 @@
         // Initialize game
         function initializeGame() {
             setupEventListeners();
-            setupKeyboardControls();
-            updateAllDisplays();
-            // Start at guild base, so update guild interface instead of map
-            updateGuildInterface();
-            // Clear the legend since we're not in a map view
-            document.getElementById('map-legend').innerHTML = '<div style="color: #888; font-size: 10px;">No map active</div>';
+            // Initialize systems
+            window.inputManager.initialize();
+            window.uiManager.initialize();
+            window.leftPanel.initialize();
+            window.movementSystem.initialize();
+            window.movementValidator.initialize();
+            window.enemyAI.initialize();
+            window.encounterManager.initialize();
+            window.encounterScaling.initialize();
+            window.tacticalCombat.initialize();
+            window.gameManager.initialize();
+            
+            // Set initial UI state
+            window.inputManager.setUIState(currentUIState);
+            window.uiManager.currentUIState = currentUIState;
+            
+            // Update displays
+            window.uiManager.updateAllDisplays();
+            window.uiManager.updateGuildInterface();
+            window.uiManager.clearMapLegend();
+            
             addLog('Single-player party-based roguelike initialized!', 'system');
             addLog('Welcome to the Guild Base! Create your party to begin.', 'system');
         }
@@ -937,194 +973,38 @@
             eventSystem.on('COMBAT_MESSAGE', (data) => addLog(data.message, 'combat'));
         }
 
-        function setupKeyboardControls() {
-            const keyHandlers = {
-                w: () => currentUIState === 'dungeon' ? handleMovement(0, -1) : null,
-                arrowup: () => currentUIState === 'dungeon' ? handleMovement(0, -1) : null,
-                s: () => currentUIState === 'dungeon' ? handleMovement(0, 1) : null,
-                arrowdown: () => currentUIState === 'dungeon' ? handleMovement(0, 1) : null,
-                a: () => currentUIState === 'dungeon' ? handleMovement(-1, 0) : null,
-                arrowleft: () => currentUIState === 'dungeon' ? handleMovement(-1, 0) : null,
-                d: () => currentUIState === 'dungeon' ? handleMovement(1, 0) : null,
-                arrowright: () => currentUIState === 'dungeon' ? handleMovement(1, 0) : null,
-                g: () => {
-                    if (currentUIState === 'guild') {
-                        switchToDungeonState();
-                    } else {
-                        switchToGuildState();
-                    }
-                },
-                m: () => {
-                    if (currentUIState === 'world-map') {
-                        switchToDungeonState();
-                    } else if (currentUIState === 'dungeon' || currentUIState === 'guild') {
-                        switchToWorldMapState();
-                    }
-                },
-                escape: () => {
-                    if (currentUIState !== 'dungeon') {
-                        switchToDungeonState();
-                    }
-                },
-                ' ': () => currentUIState === 'dungeon' ? handleWait() : null
-            };
-            
-            document.addEventListener('keydown', (e) => {
-                // Check if an input field is focused
-                const activeElement = document.activeElement;
-                const isInputFocused = activeElement && (
-                    activeElement.tagName === 'INPUT' || 
-                    activeElement.tagName === 'TEXTAREA' ||
-                    activeElement.contentEditable === 'true'
-                );
-                
-                // Don't handle game keys when typing in input fields
-                if (isInputFocused) {
-                    return;
-                }
-                
-                // Handle keyboard based on current UI state
-                const key = e.key.toLowerCase();
-                const handler = keyHandlers[key];
-                
-                if (handler) {
-                    handler();
-                    e.preventDefault();
-                } else if (/^[1-9]$/.test(e.key) && currentUIState === 'dungeon') {
-                    handleAbilityKey(parseInt(e.key));
-                    e.preventDefault();
-                }
-            });
-        }
 
-        function handleMovement(dx, dy) {
-            if (!gameState.party.members.size) {
-                addLog('No party members! Visit Guild Base to create characters.', 'system');
-                return;
-            }
 
-            // Calculate new position
-            const newX = gameState.location.playerX + dx;
-            const newY = gameState.location.playerY + dy;
-            
-            // Check if new position is valid (not a wall)
-            if (!canMoveTo(newX, newY)) {
-                addLog('There is a wall blocking your path!', 'system');
-                return;
-            }
 
-            // Move the player
-            gameState.location.playerX = newX;
-            gameState.location.playerY = newY;
-            
-            const activeCharacter = getActiveCharacter();
-            if (activeCharacter) skillSystem.awardSkillUse(activeCharacter, 'running', 'trivial', 2);
-            
-            updateMapDisplay();
-            // Don't log every movement - it's too verbose
-        }
+        // Enemy AI and Movement System
 
-        function canMoveTo(x, y) {
-            // Check if we're in a dungeon
-            if (gameState.currentRun.active) {
-                // Get current room template
-                const currentRoom = gameState.currentRun.floor || 1;
-                const template = dungeonGenerator.getCurrentTemplate(currentRoom);
-                
-                if (!template) return false;
-                
-                // Check boundaries
-                if (x < 0 || x >= template.width || y < 0 || y >= template.height) {
-                    return false;
-                }
-                
-                // Check if the position is a wall
-                if (template.walls) {
-                    for (const [wallX, wallY] of template.walls) {
-                        if (wallX === x && wallY === y) {
-                            return false; // Position is a wall
-                        }
-                    }
-                }
-                
-                // Check if there's an object at this position
-                if (template.objects) {
-                    for (const obj of template.objects) {
-                        if (obj.x === x && obj.y === y) {
-                            // Different messages for different object types
-                            switch(obj.type) {
-                                case 'chest':
-                                    addLog(`There's a chest here. Press E to interact.`, 'system');
-                                    return false;
-                                case 'door':
-                                    if (obj.locked) {
-                                        addLog(`The door is locked. You need a key.`, 'system');
-                                    } else {
-                                        addLog(`There's a door here. Press E to open.`, 'system');
-                                    }
-                                    return false;
-                                case 'container':
-                                    addLog(`There's a container here. Press E to search it.`, 'system');
-                                    return false;
-                                default:
-                                    if (obj.blocksMovement) {
-                                        addLog(`The ${obj.type} is blocking your way!`, 'system');
-                                        return false;
-                                    }
-                            }
-                        }
-                    }
-                }
-                
-                return true; // Position is walkable
-            } else {
-                // For non-dungeon areas, allow free movement for now
-                return true;
-            }
-        }
 
-        function handleAbilityKey(abilityNum) {
-            const activeCharacter = getActiveCharacter();
-            if (!activeCharacter) {
-                addLog('No active character!', 'system');
-                return;
-            }
 
-            // Get slotted ability for this hotkey (0-indexed, so subtract 1)
-            const slotIndex = abilityNum - 1;
-            const slots = abilitySlotManager.initializeSlots(activeCharacter);
-            const abilityKey = slots.active[slotIndex];
-            
-            if (!abilityKey) {
-                addLog(`No ability slotted in slot ${abilityNum}`, 'system');
-                return;
-            }
 
-            // Use the ability through the engine
-            const result = abilityEngine.useAbility(activeCharacter, abilityKey);
-            
-            if (result.success) {
-                const ability = abilityRegistry.getAbility(abilityKey);
-                addLog(`${activeCharacter.name} uses ${ability.name}!`, 'combat');
-                
-                // Show effects if any
-                if (result.effects && Object.keys(result.effects).length > 0) {
-                    const effectsText = Object.entries(result.effects)
-                        .map(([effect, value]) => `${effect}: ${value}`)
-                        .join(', ');
-                    addLog(`Effects: ${effectsText}`, 'combat');
-                }
-            } else {
-                const ability = abilityRegistry.getAbility(abilityKey);
-                addLog(`${activeCharacter.name}'s ${ability ? ability.name : abilityKey} failed: ${result.reason}`, 'combat');
-            }
-            
-            updateAllDisplays();
-        }
 
-        function handleWait() {
-            addLog('Waiting...', 'system');
-        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // Guild interface
         // Legacy functions - now redirect to new state system
@@ -1322,100 +1202,7 @@
             characterGenerator.openCharacterCreation();
         }
         
-        function createRandomCharacter() {
-            // Generate a random name
-            const randomNames = [
-                'Aldric', 'Bryenna', 'Caelum', 'Dara', 'Ewan', 'Fiona', 'Gareth', 'Hilda',
-                'Ivan', 'Jora', 'Kael', 'Luna', 'Magnus', 'Nora', 'Orin', 'Petra',
-                'Quinn', 'Raven', 'Soren', 'Thora', 'Ulric', 'Vera', 'Wren', 'Xara',
-                'Yorick', 'Zara', 'Ash', 'Blaze', 'Cole', 'Dawn', 'Echo', 'Fox'
-            ];
-            const randomName = randomNames[Math.floor(Math.random() * randomNames.length)];
-            
-            // Generate random character
-            const randomCharacter = generateRandomCharacter(randomName);
-            
-            // Add to guild storage
-            gameState.guild.storedCharacters.set(randomCharacter.id, randomCharacter);
-            
-            // Initialize abilities
-            initializeCharacterAbilities(randomCharacter);
-            
-            // Update displays
-            updateGuildInterface();
-            
-            addLog(`Created random character: ${randomCharacter.name}`, 'system');
-        }
         
-        function generateRandomCharacter(name) {
-            // Get all available skills from the skill system
-            const allSkills = Object.keys(skillSystem.skillDefinitions);
-            
-            // Create base character
-            const character = {
-                id: `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                name: name,
-                health: 100,
-                maxHealth: 100,
-                ap: 3,
-                maxAP: 3,
-                skills: {},
-                equipment: {
-                    weapon: null,
-                    armor: null,
-                    accessories: []
-                },
-                x: 12,
-                y: 10
-            };
-            
-            // Randomly allocate 25 skill points
-            let remainingPoints = 25;
-            const selectedSkills = [];
-            
-            // Pick 3-6 random skills to focus on
-            const numSkills = 3 + Math.floor(Math.random() * 4);
-            for (let i = 0; i < numSkills && remainingPoints > 0; i++) {
-                const randomSkill = allSkills[Math.floor(Math.random() * allSkills.length)];
-                if (!selectedSkills.includes(randomSkill)) {
-                    selectedSkills.push(randomSkill);
-                }
-            }
-            
-            // Distribute points among selected skills
-            selectedSkills.forEach(skillKey => {
-                if (remainingPoints > 0) {
-                    const maxPoints = Math.min(10, remainingPoints); // Cap at 10 points per skill
-                    const points = 1 + Math.floor(Math.random() * maxPoints);
-                    character.skills[skillKey] = {
-                        level: points,
-                        experience: 0,
-                        mastery: skillSystem.getMasteryLevel(points)
-                    };
-                    remainingPoints -= points;
-                }
-            });
-            
-            // Spend any remaining points randomly
-            while (remainingPoints > 0) {
-                const randomSkill = allSkills[Math.floor(Math.random() * allSkills.length)];
-                if (!character.skills[randomSkill]) {
-                    character.skills[randomSkill] = { level: 0, experience: 0, mastery: 'Novice' };
-                }
-                if (character.skills[randomSkill].level < 10) {
-                    character.skills[randomSkill].level++;
-                    character.skills[randomSkill].mastery = skillSystem.getMasteryLevel(character.skills[randomSkill].level);
-                    remainingPoints--;
-                }
-            }
-            
-            // Select a random starting weapon
-            const weaponTypes = ['sword', 'axe', 'dagger', 'staff', 'bow', 'mace'];
-            const randomWeaponType = weaponTypes[Math.floor(Math.random() * weaponTypes.length)];
-            character.equipment.weapon = weaponSystem.createWeapon(randomWeaponType, 1);
-            
-            return character;
-        }
         
         function createFullRandomCharacter() {
             const name = document.getElementById('char-name-input').value.trim();
@@ -1615,6 +1402,10 @@
 
         function endCurrentRun() {
             if (gameState.currentRun.active) {
+                // Clear enemies from current run
+                const enemies = gameState.getCurrentEnemies();
+                enemies.clear();
+                
                 gameState.returnToGuild();
                 addLog('Returned to Guild Base', 'system');
                 document.getElementById('start-run-btn').disabled = false;
@@ -1815,6 +1606,11 @@
         }
 
         function renderDungeonRoom() {
+            // Check if we're in combat mode
+            if (gameState.combat.active) {
+                return renderCombatRoom();
+            }
+            
             // Get current room from dungeon generator
             const currentRoom = gameState.currentRun.floor || 1;
             const template = dungeonGenerator.getCurrentTemplate(currentRoom);
@@ -1825,7 +1621,7 @@
 
             // Generate enemies for this room if not already done
             try {
-                dungeonGenerator.generateRoomEnemies(gameState);
+                ensureRoomEnemiesGenerated();
                 console.log('Enemy generation attempt completed');
             } catch (error) {
                 console.warn('Could not generate enemies:', error);
@@ -1926,6 +1722,71 @@
             for (let y = 0; y < height; y++) {
                 mapContent += roomMap[y].join('') + '\n';
             }
+            
+            return mapContent;
+        }
+
+        function renderCombatRoom() {
+            const combatRoom = gameState.combat.currentRoom;
+            if (!combatRoom) {
+                return 'Error: No combat room data\n';
+            }
+
+            let mapContent = `TACTICAL COMBAT - Round ${gameState.combat.round}\n\n`;
+            
+            // Build the combat room layout
+            const width = combatRoom.width;
+            const height = combatRoom.height;
+            
+            // Initialize room with floors
+            const roomMap = [];
+            for (let y = 0; y < height; y++) {
+                roomMap[y] = new Array(width).fill('.');
+            }
+            
+            // Place walls
+            if (combatRoom.walls) {
+                combatRoom.walls.forEach(([x, y]) => {
+                    if (y >= 0 && y < height && x >= 0 && x < width) {
+                        roomMap[y][x] = '#';
+                    }
+                });
+            }
+            
+            // Place combat enemies
+            const enemies = gameState.combat.enemies;
+            enemies.forEach((enemy, id) => {
+                if (enemy.alive && enemy.x >= 0 && enemy.x < width && enemy.y >= 0 && enemy.y < height) {
+                    const enemySymbol = enemy.name ? enemy.name.charAt(0).toUpperCase() : 'E';
+                    roomMap[enemy.y][enemy.x] = enemySymbol;
+                }
+            });
+            
+            // Place party members
+            const partyMembers = Array.from(gameState.party.members.values());
+            partyMembers.forEach((member, index) => {
+                if (member.health > 0 && member.x >= 0 && member.x < width && member.y >= 0 && member.y < height) {
+                    // Use numbers for party members in combat
+                    const memberSymbol = (index + 1).toString();
+                    roomMap[member.y][member.x] = memberSymbol;
+                }
+            });
+            
+            // Highlight current turn character
+            const currentTurn = gameState.combat.turnOrder[gameState.combat.currentTurnIndex];
+            if (currentTurn && currentTurn.x >= 0 && currentTurn.x < width && currentTurn.y >= 0 && currentTurn.y < height) {
+                // Current turn character gets highlighted with @
+                roomMap[currentTurn.y][currentTurn.x] = '@';
+            }
+            
+            // Convert to string
+            for (let y = 0; y < height; y++) {
+                mapContent += roomMap[y].join('') + '\n';
+            }
+            
+            // Add combat status
+            mapContent += `\nCurrent Turn: ${currentTurn ? currentTurn.name : 'Unknown'}\n`;
+            mapContent += `Enemies Remaining: ${Array.from(enemies.values()).filter(e => e.alive).length}\n`;
             
             return mapContent;
         }
@@ -2034,6 +1895,11 @@
             if (newStateEl) {
                 newStateEl.classList.add('active');
                 currentUIState = newState;
+                
+                // Update input manager state
+                if (window.inputManager) {
+                    window.inputManager.setUIState(newState);
+                }
                 
                 // Update specific state content and legends
                 if (newState === 'world-map') {

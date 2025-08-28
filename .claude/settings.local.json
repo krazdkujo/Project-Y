@@ -78,7 +78,13 @@
       "Bash(git push:*)",
       "Bash(move \"C:\\Dev\\New Test\\src\\skills\\SkillCategories.js\" \"C:\\Dev\\New Test\\src\\character\\skills\"\")",
       "Bash(sed:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(python:*)",
+      "Bash(start http://localhost:8080/single-player-ascii-game.html)",
+      "Bash(start http://localhost:4173)",
+      "Bash(start test-character-creation.html)",
+      "Bash(start http://localhost:3005)",
+      "Bash(start http://localhost:3006)"
     ],
     "deny": [],
     "ask": []

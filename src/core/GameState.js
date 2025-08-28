@@ -419,3 +419,6 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
   window.GameState = GameState;
 }
+
+// ES6 module export
+export default GameState;

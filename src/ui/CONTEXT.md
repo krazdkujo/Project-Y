@@ -1,37 +1,66 @@
-# Folder Context: ui
+# UI System
 
 ## Purpose
-User interface components for the tactical ASCII roguelike that maintain strict ASCII visual standards while providing interactive gameplay interfaces. Contains specialized UI systems for different game mechanics.
+Centralized user interface management system for the single-player ASCII roguelike. Handles display updates, state transitions, and panel management.
 
-## Key Files
-- `lockpicking/LockpickingUI.js` - Complete ASCII interface for lockpicking system with interactive panels and visual feedback
-- `lockpicking/CONTEXT.md` - Documentation for lockpicking UI system
+## Architecture
 
-## Dependencies
-- Internal: EventSystem for notifications, individual game systems for data and mechanics
-- External: Main game UI system for message display and panel integration
+### Core Components
+- **UIManager** (`core/UIManager.js`) - Central UI coordinator and state manager
+- **LeftPanel** (`panels/LeftPanel.js`) - Party display, character status, and abilities
+
+### Key Features
+- **State Management**: Manages UI state transitions (guild, dungeon, world-map, character-creation)
+- **Display Updates**: Coordinates updates across all UI panels
+- **Map Rendering**: Handles both exploration and combat map display
+- **Party Management**: Real-time party status and active character display
+- **Ability Interface**: Dynamic ability slot display with AP costs and availability
+
+## UI States
+- **guild**: Guild base interface with character management
+- **dungeon**: Dungeon exploration with map and party status
+- **world-map**: World map for location selection
+- **character-creation**: Character creation interface
+- **combat**: Tactical combat view (overlay on dungeon state)
+
+## Display Components
+
+### Left Panel
+- Party member status with health/AP bars
+- Active character details and turn information
+- Ability slots (1-9) with availability indicators
+
+### Center Panel (Map)
+- **Exploration Mode**: Dungeon room with player (@), enemies (a-z), objects (&,+,{)
+- **Combat Mode**: Tactical combat room with party members (1-6), current turn (@)
+
+### Right Panel
+- Adventure log and system messages
+- Combat messages and ability feedback
 
 ## Integration Points
-The UI systems connect to:
-- **Main Game UI**: Integration through event emissions (ui:message, ui:show_panel)
-- **ASCII Standards**: Maintains 40-character box-drawing panels (┌─┐│└┘├┤┬┴┼)
-- **Input System**: Handles 1-9 hotkeys and ESC interactions
-- **Event System**: Reactive UI updates from game system events
-- **Visual Standards**: Terminal green color scheme and consistent formatting
+- Integrates with GameState for party and combat data
+- Uses ability system (abilityRegistry, abilitySlotManager, abilityEngine)
+- Coordinates with input system for state transitions
+- Works with combat system for tactical display
 
-## UI Architecture
-- **Modular Design**: Each system has dedicated UI components
-- **Event-Driven**: UI responds to game events rather than polling
-- **ASCII Compliance**: All interfaces use ASCII box-drawing characters
-- **Consistent Layout**: Standardized panel width and formatting
-- **Interactive Elements**: Clear hotkey mapping and action feedback
+## Usage
+```javascript
+// Initialize UI system
+window.uiManager.initialize();
 
-## Visual Standards
-- 40-character wide panels for consistency
-- Box-drawing character usage: ┌─┐│└┘├┤┬┴┼
-- Terminal green color scheme (#00ff00 on #000000)
-- Message categorization (success, error, warning, info)
-- Clear action mapping (1-9 for choices, ESC for cancel)
+// Update all displays
+window.uiManager.updateAllDisplays();
 
-## Last Updated
-2025-08-27: Created with lockpicking UI system implementation
+// Change UI state
+window.uiManager.switchToDungeonState();
+
+// Update specific panels
+window.leftPanel.updatePartyDisplay();
+```
+
+## Dependencies
+- GameState (global)
+- Ability System (abilityRegistry, abilitySlotManager, abilityEngine)
+- DungeonGenerator (dungeonGenerator)
+- Input System (window.inputManager)

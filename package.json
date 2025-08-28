@@ -2,11 +2,14 @@
   "name": "tactical-ascii-roguelike",
   "version": "1.0.0",
   "description": "Real-time tactical ASCII roguelike with refined AP system",
-  "main": "dungeon-server.js",
+  "main": "dist/main.js",
+  "type": "module",
   "scripts": {
-    "dev": "node src/server.js",
-    "start": "node src/server.js",
-    "dev:legacy": "node dungeon-server.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:analyze": "vite build --mode analyze",
+    "serve": "npm run build && npm run preview",
     "test:visual": "npx playwright test tests/visual-regression.spec.ts tests/quick-skill-bar-visual.spec.ts tests/ascii-character-validation.spec.ts tests/color-scheme-validation.spec.ts",
     "test:visual:all": "npx playwright test tests/visual-regression.spec.ts tests/quick-skill-bar-visual.spec.ts tests/ascii-character-validation.spec.ts tests/color-scheme-validation.spec.ts --reporter=html",
     "test:visual:critical": "npx playwright test tests/quick-skill-bar-visual.spec.ts --reporter=list",
@@ -31,7 +34,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
-    "@types/node": "^20.8.0"
+    "@types/node": "^20.8.0",
+    "terser": "^5.43.1",
+    "vite": "^7.1.3"
   },
   "engines": {
     "node": ">=18.0.0"

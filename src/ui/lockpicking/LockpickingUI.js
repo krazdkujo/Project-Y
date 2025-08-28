@@ -372,7 +372,7 @@ class LockpickingUI {
     if (data.consequences) {
       data.consequences.forEach(consequence => {
         if (consequence === 'lockpick_broken') {
-          this.displayMessage('⚠ A lockpick was broken in the attempt', 'warning');
+          this.displayMessage('A lockpick was broken in the attempt', 'warning');
         } else if (consequence === 'alarm_triggered') {
           this.displayAlarmWarning();
         }

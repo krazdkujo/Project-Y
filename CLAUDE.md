@@ -6,9 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development Server
 ```bash
-npm run dev          # Start development server (single-player-ascii-game.html)
-npm start            # Start production server
-npm run dev:legacy   # Legacy server (dungeon-server.js)
+npm run dev          # Start Vite development server (index.html)
+npm run build        # Build for production using Vite
+npm run preview      # Preview production build
+npm run serve        # Build and preview production build
+npm run build:analyze # Build with bundle analysis
 ```
 
 ### Testing Commands
@@ -28,9 +30,10 @@ npm run test:visual:report    # Show Playwright test report
 ### Single-Player Party-Based ASCII Roguelike
 This is a **single-player party-based ASCII roguelike** with **skill-based progression** supporting **up to 6 party members**. The architecture centers around:
 
-**Client-Side Architecture (single-player-ascii-game.html)**
-- Pure HTML/CSS/JavaScript with no build process
-- Modular JavaScript systems loaded via script tags
+**Client-Side Architecture (index.html with Vite)**
+- Modern ES6+ JavaScript modules with Vite build system
+- Hot module replacement for fast development
+- Modular architecture with ES6 imports
 - ASCII UI with terminal green color scheme (#00ff00 on #000000)
 - Grid-based layout: left panel (party/abilities), center (map), right panel (log/info)
 
@@ -72,6 +75,17 @@ This is a **single-player party-based ASCII roguelike** with **skill-based progr
 - `story-writer-dm`: For game content, enemies, and balance
 - `context-mapper`: For understanding codebase structure and relationships
 
+## Build System & Development Tools
+
+### Vite Configuration
+- **Development**: Hot module replacement on port 3000 with auto-opening
+- **Production**: Optimized builds with Terser minification and source maps
+- **Manual Chunking**: Strategic code splitting for:
+  - `game-core`: Core game state and event systems
+  - `game-ui`: UI components and panels  
+  - `game-systems`: Combat, movement, and encounter systems
+- **Asset Handling**: Includes .md and .txt files for game content
+
 ## Development Workflow
 
 ### Project State
@@ -83,11 +97,12 @@ This is a **single-player party-based ASCII roguelike** with:
 - Modular JavaScript architecture with event-driven design
 
 ### Code Standards
-- Pure JavaScript (ES6+) with no build process required
-- Modular architecture with clear separation of concerns
+- Modern ES6+ JavaScript modules with Vite build system
+- Modular architecture with clear separation of concerns  
 - Event-driven design using EventSystem for loose coupling
 - Comprehensive CONTEXT.md files in each major directory
 - Visual regression testing required for any UI changes
+- Manual chunking strategy for optimized game loading
 
 ### Testing Strategy
 - Playwright tests for functionality and visual regression
@@ -118,18 +133,26 @@ This is a **single-player party-based ASCII roguelike** with:
 ## Important Files & Directories
 
 ### Core Configuration
-- `package.json`: npm scripts and Playwright dependencies
-- `single-player-ascii-game.html`: Main game interface and entry point
+- `package.json`: npm scripts, Vite, and Playwright dependencies
+- `vite.config.js`: Vite configuration with manual chunking for game optimization
+- `index.html`: Main game entry point with module loading
+- `src/main.js`: Application entry point with ES6 module system
 
 ### Game Systems Directory Structure
 - `src/core/`: GameState, EventSystem - central game management
 - `src/character/`: Character generation, skills, abilities
-- `src/combat/`: CombatManager, TurnManager - battle systems
+- `src/abilities/`: Comprehensive ability system (combat, magic, exploration, passive)
+- `src/combat/`: CombatManager, TurnManager, StatusEffectRegistry - battle systems
 - `src/enemies/`: EnemySystem with tiered scaling
 - `src/equipment/`: Weapons and gear systems
 - `src/dungeon/`: DungeonGenerator for procedural content
+- `src/encounters/`: Encounter management and tactical combat systems
+- `src/movement/`: MovementSystem, EnemyAI, and movement validation
+- `src/input/`: InputManager and ability handlers
+- `src/game/`: GameManager and high-level game coordination
 - `src/systems/`: Specialized systems (lockpicking, etc.)
-- `src/ui/`: UI components and interfaces
+- `src/ui/`: UI components, panels, and interface management
+- `src/styles/`: CSS styling for the ASCII interface
 
 ### Testing
 - `tests/`: Playwright test suites for functionality and visual regression
@@ -139,3 +162,4 @@ This codebase represents a complete single-player roguelike with comprehensive p
 - Never use emoji's
 - always ask the context agent what directories you need to work in, and give him any updates you make to update the context docs.
 - always check with the context agent, then refactor code when possible as opposed to writing new code. Clean, notated, condensed code is best.
+- Any time work is completed, call the context agent to update the files that have been changed.

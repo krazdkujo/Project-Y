@@ -77,7 +77,8 @@
       "Bash(git remote set-url:*)",
       "Bash(git push:*)",
       "Bash(move \"C:\\Dev\\New Test\\src\\skills\\SkillCategories.js\" \"C:\\Dev\\New Test\\src\\character\\skills\"\")",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
